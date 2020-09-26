@@ -1,16 +1,22 @@
 import java.io.*;
 import java.util.*;
 import java.awt.Color;
+import java.awt.event.*;
 import javax.swing.JFrame;
+import org.jfree.data.xy.XYSeries;
 import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
-import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.xy.XYDataset;
-import org.jfree.data.xy.XYSeries;
+import javax.swing.WindowConstants;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartMouseEvent;
+import org.jfree.chart.ChartMouseListener;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.chart.annotations.XYAnnotation;
+import org.jfree.chart.annotations.XYTextAnnotation;
+import org.jfree.chart.entity.XYItemEntity;
 
 public class problem{
     static ArrayList<String> dataArray = new ArrayList<String>();
@@ -85,12 +91,31 @@ public class problem{
             XYPlot scatterplot = (XYPlot)chart.getPlot();
             scatterplot.setBackgroundPaint(new Color(255,255,255));
             ChartPanel panel = new ChartPanel(chart);
+            panel.addChartMouseListener(new ChartMouseListener(){
+                XYAnnotation annot;
+                @Override
+                public void chartMouseClicked(ChartMouseEvent me){
+                    if(me.getEntity() instanceof XYItemEntity){
+                        XYItemEntity i = (XYItemEntity) me.getEntity();
+                        double xAnnot = dataset.getXValue(i.getSeriesIndex(), i.getItem());
+                        double yAnnot = dataset.getYValue(i.getSeriesIndex(), i.getItem());
+                        annot = new XYTextAnnotation(Integer.toString(i.getItem()) + 1, xAnnot, yAnnot + 100);
+                        scatterplot.addAnnotation(annot);
+                    }
+                }
+                @Override
+                public void chartMouseMoved(ChartMouseEvent me){
+                    if(scatterplot.getAnnotations().size() != 0){
+                        scatterplot.removeAnnotation(annot);
+                    }
+                }
+            });
             setContentPane(panel);
         }
 
         private XYDataset createDataset(ArrayList<ArrayList> dataArray){
             XYSeriesCollection dataset = new XYSeriesCollection();
-            XYSeries series = new XYSeries("Cities");
+            XYSeries series = new XYSeries("Cities", false);
             ArrayList<Integer> xCoord = dataArray.get(0);
             ArrayList<Integer> yCoord = dataArray.get(1);
             for(int i = 0; i < xCoord.size(); i++){
@@ -99,5 +124,9 @@ public class problem{
             dataset.addSeries(series);
             return dataset;
         }
+
+        // private int findIndex(int x, int y, ArrayList<ArrayList> dataArray){
+            
+        // }
     }
 }
