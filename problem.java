@@ -19,7 +19,6 @@ import org.jfree.chart.entity.PlotEntity;
 import org.jfree.chart.entity.XYItemEntity;
 import org.jfree.data.xy.XYSeriesCollection;
 import java.awt.event.MouseEvent;
-
 import org.jfree.chart.annotations.XYAnnotation;
 import org.jfree.chart.annotations.XYTextAnnotation;
 
@@ -40,13 +39,6 @@ public class problem{
         plot.setLocationRelativeTo(null);
         plot.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         plot.setVisible(true);
-
-        cityData = initializePheromone();
-        ant ant1 = new ant(cityData);
-        ArrayList<Integer> solution1 = ant1.constuctSolution();
-        System.out.println(solution1);
-        plot.changeDataset(solution1);
-        
     }
 
     public static void readFile(String file){
@@ -79,96 +71,79 @@ public class problem{
     }
 
     public static ArrayList<ArrayList> plotCities(ArrayList<String> list){
-        ArrayList<Integer> xCoord = new ArrayList<Integer>();
-        ArrayList<Integer> yCoord = new ArrayList<Integer>();
+        ArrayList<ArrayList> coord = new ArrayList<ArrayList>();
+        int initPheromone = 0;
         for(int i = 0; i < list.size(); i++){
             String record = list.get(i);
             String[] coords = record.split(" ");
-            xCoord.add(Integer.parseInt(coords[1]));
-            yCoord.add(Integer.parseInt(coords[2]));
+            ArrayList<Integer> city = new ArrayList<Integer>();
+            city.add(Integer.parseInt(coords[1]));
+            city.add(Integer.parseInt(coords[2]));
+            city.add(initPheromone);
+            coord.add(city);
         }
-        ArrayList<ArrayList> data = new ArrayList<ArrayList>();
-        data.add(xCoord);
-        data.add(yCoord);
-        return data;
-    }
-
-    public static ArrayList<ArrayList> initializePheromone(){
-        ArrayList<Integer> pheromone = new ArrayList<Integer>();
-        for(int i = 0; i < cityData.get(0).size(); i++){
-            pheromone.add(0);
-        }
-        cityData.add(pheromone);
-        return cityData;
+        return coord;
     }
 
     private static class Plot extends JFrame{
         private static final long serialVersionUID = 6294689542092367723L;
+        XYTextAnnotation annot;
+        ArrayList<ArrayList> solution1;
         XYDataset dataset = createDataset(cityData);
         JFreeChart chart = ChartFactory.createScatterPlot("Cities for TSP", "X-Axis", "Y-Axis", dataset);
         XYPlot scatterplot = (XYPlot)chart.getPlot();
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
         ChartPanel panel = new ChartPanel(chart);
-        XYTextAnnotation annot;
+        
         public Plot(String title){
             super(title);
             scatterplot.setBackgroundPaint(new Color(255,255,255));
             panel.addChartMouseListener(new ChartMouseListener(){
                 @Override
                 public void chartMouseClicked(ChartMouseEvent me){
+                    Ant ant1 = new Ant(cityData);
+                    solution1 = ant1.constuctSolution();
+                    System.out.println(solution1);
+                    ant1.calculateFitness(solution1);
+                    scatterplot.setDataset(createDataset(solution1));
+                    renderer.setSeriesLinesVisible(0, true);
+                    scatterplot.setRenderer(renderer);
+                    setContentPane(panel);
+                }
+                @Override
+                public void chartMouseMoved(ChartMouseEvent me){
                     if(me.getEntity() instanceof XYItemEntity){
-                        if(!renderer.getSeriesLinesVisible(0)){
-                            XYItemEntity i = (XYItemEntity) me.getEntity();
+                        if(renderer.getSeriesLinesVisible(0) == null || !renderer.getSeriesLinesVisible(0)){
+                            if(scatterplot.getAnnotations().size() != 0){
+                                scatterplot.removeAnnotation(annot);
+                            }
+                            XYItemEntity i = (XYItemEntity)me.getEntity();
                             double xAnnot = dataset.getXValue(i.getSeriesIndex(), i.getItem());
                             double yAnnot = dataset.getYValue(i.getSeriesIndex(), i.getItem());
                             annot = new XYTextAnnotation(Integer.toString(i.getItem() + 1), xAnnot, yAnnot + 100);
                             scatterplot.addAnnotation(annot);
                         }
                         else{
-                            scatterplot.removeAnnotation(annot);
-                            XYItemEntity i = (XYItemEntity) me.getEntity();
-                            double xAnnot = dataset.getXValue(i.getSeriesIndex(), i.getItem());
-                            double yAnnot = dataset.getYValue(i.getSeriesIndex(), i.getItem());
-                            annot = new XYTextAnnotation(Integer.toString(i.getItem() + 1), xAnnot, yAnnot + 100);
+                            if(scatterplot.getAnnotations().size() != 0){
+                                scatterplot.removeAnnotation(annot);
+                            }
+                            XYItemEntity i = (XYItemEntity)me.getEntity();
+                            double xAnnot = scatterplot.getDataset().getXValue(i.getSeriesIndex(), i.getItem());
+                            double yAnnot = scatterplot.getDataset().getYValue(i.getSeriesIndex(), i.getItem());
+                            annot = new XYTextAnnotation(Integer.toString((int)solution1.get(i.getItem()).get(3) + 1), xAnnot, yAnnot + 100);
                             scatterplot.addAnnotation(annot);
                         }
-                    }
-                }
-                @Override
-                public void chartMouseMoved(ChartMouseEvent me){
-                    if(scatterplot.getAnnotations().size() != 0 && !renderer.getSeriesLinesVisible(0)){
-                        scatterplot.removeAnnotation(annot);
-                    }
-                    else{
-                        return;
                     }
                 }
             });
             setContentPane(panel);
         }
 
-        public void changeDataset(ArrayList<Integer> solution){
-            XYSeriesCollection newDataset = new XYSeriesCollection();
-            XYSeries series = new XYSeries("Solution", false);
-            for(int i = 0; i < solution.size(); i++){
-                series.add((int)cityData.get(0).get(solution.get(i)), (int)cityData.get(1).get(solution.get(i)));
-            }
-            newDataset.addSeries(series);
-            annot = new XYTextAnnotation("Start", (double)series.getX(0), (double)series.getY(0) + 100);
-            scatterplot.setDataset(newDataset);
-            scatterplot.addAnnotation(annot);
-            renderer.setSeriesLinesVisible(0, true);
-            scatterplot.setRenderer(renderer);
-            setContentPane(panel);
-        }
-
         private XYDataset createDataset(ArrayList<ArrayList> dataArray){
             XYSeriesCollection dataset = new XYSeriesCollection();
             XYSeries series = new XYSeries("Cities", false);
-            ArrayList<Integer> xCoord = dataArray.get(0);
-            ArrayList<Integer> yCoord = dataArray.get(1);
-            for(int i = 0; i < xCoord.size(); i++){
-                series.add(xCoord.get(i), yCoord.get(i));
+            for(int i = 0; i < dataArray.size(); i++){
+                series.add((int)dataArray.get(i).get(0), (int)dataArray.get(i).get(1));
             }
             dataset.addSeries(series);
             return dataset;
