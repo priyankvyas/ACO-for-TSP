@@ -8,6 +8,7 @@ import javax.swing.SwingUtilities;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.XYPlot;
+import java.util.HashMap;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataset;
@@ -25,6 +26,7 @@ import org.jfree.chart.annotations.XYTextAnnotation;
 public class problem{
     static ArrayList<String> dataArray = new ArrayList<String>();
     static ArrayList<ArrayList> cityData = new ArrayList<ArrayList>();
+    static HashMap<Integer, HashMap<Integer, Integer>> cityMap = new HashMap<>();
     public static void main(String[] args){
         if(args.length != 1){
             System.err.println("Usage: java problem <filename>");
@@ -33,6 +35,7 @@ public class problem{
         readFile(file);
         dataArray = getCoords(dataArray);
         cityData = plotCities(dataArray);
+        cityMap = createHashMap(cityData);
 
         Plot plot = new Plot("Cities");
         plot.setSize(800,400);
@@ -85,6 +88,23 @@ public class problem{
         return coord;
     }
 
+    public static HashMap createHashMap(ArrayList<ArrayList> cities){
+        HashMap<Integer, HashMap<Integer, Integer>> map = new HashMap<>();
+        for(int i = 0; i < cities.size(); i++){
+            HashMap<Integer, Integer> dMap = new HashMap<>();
+            int startX = (int)cities.get(i).get(0);
+            int startY = (int)cities.get(i).get(1);
+            for(int j = 0; j < cities.size(); j++){
+                int endX = (int)cities.get(j).get(0);
+                int endY = (int)cities.get(j).get(1);
+                int distance = (int)Math.sqrt(Math.pow((endX - startX), 2) + Math.pow((endY - startY), 2));
+                dMap.put(j, distance);
+            }
+            map.put(i, dMap);
+        }
+        return map;
+    }
+
     private static class Plot extends JFrame{
         private static final long serialVersionUID = 6294689542092367723L;
         XYTextAnnotation annot;
@@ -101,7 +121,7 @@ public class problem{
             panel.addChartMouseListener(new ChartMouseListener(){
                 @Override
                 public void chartMouseClicked(ChartMouseEvent me){
-                    Ant ant1 = new Ant(cityData);
+                    Ant ant1 = new Ant(cityData, cityMap);
                     solution1 = ant1.constuctSolution();
                     System.out.println(solution1);
                     ant1.calculateFitness(solution1);
