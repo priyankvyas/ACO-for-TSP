@@ -1,41 +1,39 @@
 import java.io.*;
 import java.util.*;
 import java.awt.Color;
-import java.awt.event.*;
 import javax.swing.JFrame;
 import org.jfree.data.xy.XYSeries;
-import javax.swing.SwingUtilities;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.XYPlot;
 import java.util.HashMap;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataset;
 import javax.swing.WindowConstants;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
-import org.jfree.chart.entity.PlotEntity;
 import org.jfree.chart.entity.XYItemEntity;
 import org.jfree.data.xy.XYSeriesCollection;
-import java.awt.event.MouseEvent;
-import org.jfree.chart.annotations.XYAnnotation;
 import org.jfree.chart.annotations.XYTextAnnotation;
 
 public class problem{
     static ArrayList<String> dataArray = new ArrayList<String>();
-    static ArrayList<ArrayList> cityData = new ArrayList<ArrayList>();
+    static ArrayList<City> cityData = new ArrayList<>();
     static HashMap<Integer, HashMap<Integer, Integer>> cityMap = new HashMap<>();
+    static ArrayList<Ant> colony = new ArrayList<>();
+    static int numAnts = 0;
     public static void main(String[] args){
-        if(args.length != 1){
-            System.err.println("Usage: java problem <filename>");
+        if(args.length != 2){
+            System.err.println("Usage: java problem <filename> <numAnts>");
         }
         String file = args[0];
+        numAnts = Integer.parseInt(args[1]);
         readFile(file);
         dataArray = getCoords(dataArray);
         cityData = plotCities(dataArray);
         cityMap = createHashMap(cityData);
+        initiateColony();
 
         Plot plot = new Plot("Cities");
         plot.setSize(800,400);
@@ -73,30 +71,26 @@ public class problem{
         return list;
     }
 
-    public static ArrayList<ArrayList> plotCities(ArrayList<String> list){
-        ArrayList<ArrayList> coord = new ArrayList<ArrayList>();
-        int initPheromone = 0;
+    public static ArrayList<City> plotCities(ArrayList<String> list){
+        ArrayList<City> coord = new ArrayList<>();
         for(int i = 0; i < list.size(); i++){
             String record = list.get(i);
             String[] coords = record.split(" ");
-            ArrayList<Integer> city = new ArrayList<Integer>();
-            city.add(Integer.parseInt(coords[1]));
-            city.add(Integer.parseInt(coords[2]));
-            city.add(initPheromone);
+            City city = new City(Integer.parseInt(coords[1]), Integer.parseInt(coords[2]), i);
             coord.add(city);
         }
         return coord;
     }
 
-    public static HashMap createHashMap(ArrayList<ArrayList> cities){
+    public static HashMap<Integer, HashMap<Integer, Integer>> createHashMap(ArrayList<City> cities){
         HashMap<Integer, HashMap<Integer, Integer>> map = new HashMap<>();
         for(int i = 0; i < cities.size(); i++){
             HashMap<Integer, Integer> dMap = new HashMap<>();
-            int startX = (int)cities.get(i).get(0);
-            int startY = (int)cities.get(i).get(1);
+            int startX = cities.get(i).xCoord;
+            int startY = cities.get(i).yCoord;
             for(int j = 0; j < cities.size(); j++){
-                int endX = (int)cities.get(j).get(0);
-                int endY = (int)cities.get(j).get(1);
+                int endX = cities.get(j).xCoord;
+                int endY = cities.get(j).yCoord;
                 int distance = (int)Math.sqrt(Math.pow((endX - startX), 2) + Math.pow((endY - startY), 2));
                 dMap.put(j, distance);
             }
@@ -105,10 +99,50 @@ public class problem{
         return map;
     }
 
+    public static void initiateColony(){
+        for(int i = 0; i < numAnts; i++){
+            Ant ant = new Ant(cityData, cityMap);
+            colony.add(ant);
+        }
+        System.out.println(colony);
+    }
+
+    public static void deployColony(){
+        ArrayList<ArrayList> solutions = new ArrayList<>();
+        int bestScore = 1000000;
+        ArrayList<City> bestSolution = new ArrayList<>();
+        for(int i = 0; i < colony.size(); i++){
+            ArrayList<City> solution = colony.get(i).constuctSolution();
+            int score = colony.get(i).calculateFitness(solution);
+            if(score <= bestScore){
+                bestScore = score;
+                bestSolution = solution;
+            }
+            solutions.add(solution);
+        }
+        globalUpdatePheromone(solutions);
+    }
+
+    public static void globalUpdatePheromone(ArrayList<ArrayList> solutions){
+        for(int i = 0; i < solutions.size(); i++){
+            for(int j = 0; j + 1 < solutions.get(i).size(); j++){
+                City fromCity = (City)solutions.get(i).get(j);
+                City toCity = (City)solutions.get(i).get(j + 1);
+                cityData.get(fromCity.index).createPath(fromCity.index, toCity.index);
+            }
+        }
+        for(City city : cityData){
+            city.compressPaths();
+            for(City.Path path : city.paths){
+                System.out.println(path.fromCity + " " + path.toCity + " " + path.pheromoneCount);
+            }
+        }
+    }
+    
     private static class Plot extends JFrame{
         private static final long serialVersionUID = 6294689542092367723L;
         XYTextAnnotation annot;
-        ArrayList<ArrayList> solution1;
+        ArrayList<City> solution1;
         XYDataset dataset = createDataset(cityData);
         JFreeChart chart = ChartFactory.createScatterPlot("Cities for TSP", "X-Axis", "Y-Axis", dataset);
         XYPlot scatterplot = (XYPlot)chart.getPlot();
@@ -121,9 +155,9 @@ public class problem{
             panel.addChartMouseListener(new ChartMouseListener(){
                 @Override
                 public void chartMouseClicked(ChartMouseEvent me){
+                    deployColony();
                     Ant ant1 = new Ant(cityData, cityMap);
                     solution1 = ant1.constuctSolution();
-                    System.out.println(solution1);
                     ant1.calculateFitness(solution1);
                     scatterplot.setDataset(createDataset(solution1));
                     renderer.setSeriesLinesVisible(0, true);
@@ -150,7 +184,7 @@ public class problem{
                             XYItemEntity i = (XYItemEntity)me.getEntity();
                             double xAnnot = scatterplot.getDataset().getXValue(i.getSeriesIndex(), i.getItem());
                             double yAnnot = scatterplot.getDataset().getYValue(i.getSeriesIndex(), i.getItem());
-                            annot = new XYTextAnnotation(Integer.toString((int)solution1.get(i.getItem()).get(3) + 1), xAnnot, yAnnot + 100);
+                            annot = new XYTextAnnotation(Integer.toString(solution1.get(i.getItem()).index + 1), xAnnot, yAnnot + 100);
                             scatterplot.addAnnotation(annot);
                         }
                     }
@@ -159,11 +193,11 @@ public class problem{
             setContentPane(panel);
         }
 
-        private XYDataset createDataset(ArrayList<ArrayList> dataArray){
+        private XYDataset createDataset(ArrayList<City> dataArray){
             XYSeriesCollection dataset = new XYSeriesCollection();
             XYSeries series = new XYSeries("Cities", false);
             for(int i = 0; i < dataArray.size(); i++){
-                series.add((int)dataArray.get(i).get(0), (int)dataArray.get(i).get(1));
+                series.add(dataArray.get(i).xCoord, dataArray.get(i).yCoord);
             }
             dataset.addSeries(series);
             return dataset;

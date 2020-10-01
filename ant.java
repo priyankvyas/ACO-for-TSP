@@ -9,21 +9,18 @@ import java.util.Map;
 import java.util.Random;
 
 public class Ant {
-    private ArrayList<ArrayList> cityData;
+    private ArrayList<City> cityData;
     private HashMap<Integer, HashMap<Integer, Integer>> dMap;
-    public Ant(ArrayList<ArrayList> cities, HashMap<Integer, HashMap<Integer, Integer>> map){
+    public Ant(ArrayList<City> cities, HashMap<Integer, HashMap<Integer, Integer>> map){
         cityData = cities;
         dMap = map;
     }
 
-    public ArrayList<ArrayList> constuctSolution(){
-        ArrayList<ArrayList> solution = new ArrayList<ArrayList>();
+    public ArrayList<City> constuctSolution(){
+        ArrayList<City> solution = new ArrayList<>();
         Random r = new Random();
         HashMap<Integer, HashMap<Integer, Integer>> map = sortMap();
         int startPos = r.nextInt(cityData.size());
-        if(cityData.get(startPos).size() != 4){
-            cityData.get(startPos).add(startPos);
-        }
         solution.add(cityData.get(startPos));
         while(solution.size() != cityData.size()){
             HashMap<Integer, Integer> cityMap = map.get(startPos);
@@ -33,9 +30,6 @@ public class Ant {
                 index++;
                 nextPos = (int)cityMap.keySet().toArray()[index];
             }
-            if(cityData.get(nextPos).size() != 4){
-                cityData.get(nextPos).add(nextPos);
-            }
             solution.add(cityData.get(nextPos));
             startPos = nextPos;
         }
@@ -43,11 +37,11 @@ public class Ant {
         return solution;
     }
 
-    public int calculateFitness(ArrayList<ArrayList> solution){
+    public int calculateFitness(ArrayList<City> solution){
         int distance = 0;
         for(int i = 0; i < solution.size() - 1; i++){
-            int startCity = (int)solution.get(i).get(3);
-            int endCity = (int)solution.get(i + 1).get(3);
+            int startCity = (int)solution.get(i).index;
+            int endCity = (int)solution.get(i + 1).index;
             int intDist = dMap.get(startCity).get(endCity);
             distance += intDist;
         }
@@ -55,9 +49,9 @@ public class Ant {
         return distance;
     }
 
-    private boolean inSolution(int index, ArrayList<ArrayList> solution){
+    private boolean inSolution(int index, ArrayList<City> solution){
         for(int i = 0; i < solution.size(); i++){
-            if(solution.get(i).get(0) == cityData.get(index).get(0) && solution.get(i).get(1) == cityData.get(index).get(1)){
+            if(solution.get(i).xCoord == cityData.get(index).xCoord && solution.get(i).yCoord == cityData.get(index).yCoord){
                 return true;
             }
         }
@@ -70,13 +64,13 @@ public class Ant {
             HashMap<Integer, Integer> cityMap = dMap.get(i);
             List<Map.Entry<Integer, Integer>> list = new LinkedList<Map.Entry<Integer, Integer>>(cityMap.entrySet());
             Collections.sort(list, new Comparator<Map.Entry<Integer, Integer>>(){
-                public int compare(Map.Entry<Integer, Integer> o1, Map.Entry<Integer, Integer> o2){
-                    return (o1.getValue()).compareTo(o2.getValue());
+                public int compare(Map.Entry<Integer, Integer> city1, Map.Entry<Integer, Integer> city2){
+                    return (city1.getValue()).compareTo(city2.getValue());
                 } 
             });
             HashMap <Integer, Integer> temp = new LinkedHashMap<Integer, Integer>();
-            for (Map.Entry<Integer, Integer> aa : list){
-                temp.put(aa.getKey(), aa.getValue());
+            for (Map.Entry<Integer, Integer> entry : list){
+                temp.put(entry.getKey(), entry.getValue());
             }
             sortedMap.put(i, temp);
         }
