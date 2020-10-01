@@ -104,7 +104,6 @@ public class problem{
             Ant ant = new Ant(cityData, cityMap);
             colony.add(ant);
         }
-        System.out.println(colony);
     }
 
     public static void deployColony(){
@@ -133,9 +132,9 @@ public class problem{
         }
         for(City city : cityData){
             city.compressPaths();
-            for(City.Path path : city.paths){
-                System.out.println(path.fromCity + " " + path.toCity + " " + path.pheromoneCount);
-            }
+            // for(City.Path path : city.paths){
+            //     System.out.println(path.fromCity + " " + path.toCity + " " + path.pheromoneCount);
+            // }
         }
     }
     

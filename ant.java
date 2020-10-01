@@ -45,7 +45,6 @@ public class Ant {
             int intDist = dMap.get(startCity).get(endCity);
             distance += intDist;
         }
-        System.out.println(distance);
         return distance;
     }
 
