@@ -1,5 +1,5 @@
 import java.util.ArrayList;
-
+import java.rand
 import jdk.incubator.foreign.MemoryLayout.PathElement;
 
 public class City {
@@ -30,6 +30,28 @@ public class City {
             }
         }
         this.paths = destinations;
+    }
+
+    public void evaporatePheromones(){
+        // Percentage Evaporation
+        for(Path path: paths){
+            int rate = 2; // 50%
+            path.pheromoneCount = path.pheromoneCount / rate;
+        }
+
+        // Probablistic chance of evaporation
+//        Random rand = new Random;
+//        for(Path path: paths){
+//            boolean evaporate = rand.nextInt(path.pheromoneCount + 1) == 0;
+//            if(evaporate){
+//                path.pheromoneCount--;
+//            }
+//        }
+
+        // Constant Decrease
+//        for(Path path: paths){
+//            path.pheromoneCount--;
+//        }
     }
 
     protected class Path {

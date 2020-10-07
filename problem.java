@@ -132,6 +132,7 @@ public class problem{
         }
         for(City city : cityData){
             city.compressPaths();
+            city.evaporatePheromones();
             // for(City.Path path : city.paths){
             //     System.out.println(path.fromCity + " " + path.toCity + " " + path.pheromoneCount);
             // }
