@@ -15,6 +15,7 @@ import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.entity.XYItemEntity;
 import org.jfree.data.xy.XYSeriesCollection;
+
 import org.jfree.chart.annotations.XYTextAnnotation;
 
 public class problem{
@@ -107,42 +108,78 @@ public class problem{
     }
 
     public static void deployColony(){
-        ArrayList<ArrayList> solutions = new ArrayList<>();
-        int bestScore = 1000000;
-        ArrayList<City> bestSolution = new ArrayList<>();
+        ArrayList<Ant.Solution> solutionList = new ArrayList<>();
         for(int i = 0; i < colony.size(); i++){
-            ArrayList<City> solution = colony.get(i).constuctSolution();
-            int score = colony.get(i).calculateFitness(solution);
-            if(score <= bestScore){
-                bestScore = score;
-                bestSolution = solution;
-            }
-            solutions.add(solution);
+            Ant.Solution solution = colony.get(i).constuctSolution();
+            solutionList.add(solution);
         }
-        globalUpdatePheromone(solutions);
+        solutionList = sortSolutions(solutionList);
+        int bestScore = solutionList.get(0).score;
+        Ant.Solution bestSolution = solutionList.get(0);
+        System.out.print("Initital Score: " + bestScore + "\n");
+        initiatePheromone(solutionList);
+        beginOptimization();
     }
 
-    public static void globalUpdatePheromone(ArrayList<ArrayList> solutions){
+    public static void beginOptimization(){
+        ArrayList<Ant.Solution> solutionList = new ArrayList<>();
+        for(int i = 0; i < colony.size(); i++){
+            Ant.Solution solution = colony.get(i).updateSolution();
+            solutionList.add(solution);
+        }
+        solutionList = sortSolutions(solutionList);
+        int bestScore = solutionList.get(0).score;
+        Ant.Solution bestSolution = solutionList.get(0);
+        System.out.print("Best Score: " + bestScore + "\n");
+        for(City city : bestSolution.sol){
+            System.out.println(city.index);
+        }
+        
+        // initiatePheromone(solutionList);
+    }
+
+    public static ArrayList<Ant.Solution> sortSolutions(ArrayList<Ant.Solution> solutions){
+        ArrayList<Ant.Solution> temp = new ArrayList<>();
+        while(solutions.size() != 0){
+            int bestScore = 10000000;
+            Ant.Solution bestSolution = solutions.get(0);
+            for(int i = 0; i < solutions.size(); i++){
+                int score = solutions.get(i).score;
+                if(score <= bestScore){
+                    bestScore = score;
+                    bestSolution = solutions.get(i);
+                }
+            }
+            temp.add(bestSolution);
+            solutions.remove(solutions.indexOf(bestSolution));
+        }
+        return temp;
+    }
+
+    public static void initiatePheromone(ArrayList<Ant.Solution> solutions){
         for(int i = 0; i < solutions.size(); i++){
-            for(int j = 0; j + 1 < solutions.get(i).size(); j++){
-                City fromCity = (City)solutions.get(i).get(j);
-                City toCity = (City)solutions.get(i).get(j + 1);
+            for(int j = 0; j + 1 < solutions.get(i).sol.size(); j++){
+                City fromCity = (City)solutions.get(i).sol.get(j);
+                City toCity = (City)solutions.get(i).sol.get(j + 1);
                 cityData.get(fromCity.index).createPath(fromCity.index, toCity.index);
             }
         }
         for(City city : cityData){
             city.compressPaths();
-            city.evaporatePheromones();
             // for(City.Path path : city.paths){
             //     System.out.println(path.fromCity + " " + path.toCity + " " + path.pheromoneCount);
             // }
         }
     }
+
+    // public static void globalUpdatePheromone(){
+    //     city.evaporatePheromones();
+    // }
     
     private static class Plot extends JFrame{
         private static final long serialVersionUID = 6294689542092367723L;
         XYTextAnnotation annot;
-        ArrayList<City> solution1;
+        Ant.Solution solution1;
         XYDataset dataset = createDataset(cityData);
         JFreeChart chart = ChartFactory.createScatterPlot("Cities for TSP", "X-Axis", "Y-Axis", dataset);
         XYPlot scatterplot = (XYPlot)chart.getPlot();
@@ -156,10 +193,9 @@ public class problem{
                 @Override
                 public void chartMouseClicked(ChartMouseEvent me){
                     deployColony();
-                    Ant ant1 = new Ant(cityData, cityMap);
+                    Ant ant1 = colony.get(0);
                     solution1 = ant1.constuctSolution();
-                    ant1.calculateFitness(solution1);
-                    scatterplot.setDataset(createDataset(solution1));
+                    scatterplot.setDataset(createDataset(solution1.sol));
                     renderer.setSeriesLinesVisible(0, true);
                     scatterplot.setRenderer(renderer);
                     setContentPane(panel);
@@ -184,7 +220,7 @@ public class problem{
                             XYItemEntity i = (XYItemEntity)me.getEntity();
                             double xAnnot = scatterplot.getDataset().getXValue(i.getSeriesIndex(), i.getItem());
                             double yAnnot = scatterplot.getDataset().getYValue(i.getSeriesIndex(), i.getItem());
-                            annot = new XYTextAnnotation(Integer.toString(solution1.get(i.getItem()).index + 1), xAnnot, yAnnot + 100);
+                            annot = new XYTextAnnotation(Integer.toString(solution1.sol.get(i.getItem()).index + 1), xAnnot, yAnnot + 100);
                             scatterplot.addAnnotation(annot);
                         }
                     }

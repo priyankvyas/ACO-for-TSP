@@ -1,11 +1,11 @@
 import java.util.ArrayList;
-import java.rand
-import jdk.incubator.foreign.MemoryLayout.PathElement;
+import java.util.Random;
 
 public class City {
     int xCoord;
     int yCoord;
     int index;
+    double prob;
     ArrayList<Path> paths = new ArrayList<>();
     public City(int x, int y, int index){
         this.xCoord = x;
