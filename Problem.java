@@ -119,7 +119,7 @@ class problem {
 
     public static void deployColony(){
         ArrayList<Solution> solutionList = new ArrayList<>();
-        for(int i = 0; i < Colony.ants.size(); i++){
+        for(int i = 0; i < numAnts; i++){
             Solution solution = new Solution(cityData, cityMap, Colony.ants.get(i));
             Threads t = new Threads(solution, false);
             t.start();
@@ -222,7 +222,7 @@ class problem {
     public static void beginOptimization(){
         ArrayList<Solution> solutionList = new ArrayList<>();
         threads.removeAll(threads);
-        for(int i = 0; i < Colony.ants.size(); i++){
+        for(int i = 0; i < numAnts; i++){
             Solution solution = new Solution(cityData, cityMap, Colony.ants.get(i));
             Threads t = new Threads(solution, true);
             t.start();
@@ -251,12 +251,13 @@ class problem {
         for(City city : cityData){
             city.evaporatePheromones();
         }
-        growth();
+        growth(solutions);
     }
 
-    private static void growth(){
-        int g = cityData.size();
-        for(Solution solution : bestSolutions){
+    private static void growth(ArrayList<Solution> solutions){
+        for(int j = 0; j < solutions.size(); j++){
+            Solution solution = solutions.get(j);
+            double g = cityData.size() / (j + 1);
             for(int i = 0; i < solution.sol.size() - 1; i++){
                 City city = solution.sol.get(i);
                 City toCity = solution.sol.get(i + 1);
@@ -266,9 +267,6 @@ class problem {
                         break;
                     }
                 }
-            }
-            if(g > 4){
-                g -= 5;
             }
         }
     }
