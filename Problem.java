@@ -236,7 +236,8 @@ class problem {
     }
 
     private static void growth(ArrayList<Solution> solutions){
-        int g = cityData.size();
+        int g = cityData.size() + 1;
+        solutions.add(0, bestSolutions.get(0));
         for(Solution solution : solutions){
             for(int i = 0; i < solution.sol.size() - 1; i++){
                 City city = solution.sol.get(i);
