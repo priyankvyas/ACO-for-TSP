@@ -232,12 +232,12 @@ class problem {
         for(City city : cityData){
             city.evaporatePheromones();
         }
-        growth();
+        growth(solutions);
     }
 
-    private static void growth(){
+    private static void growth(ArrayList<Solution> solutions){
         int g = cityData.size();
-        for(Solution solution : bestSolutions){
+        for(Solution solution : solutions){
             for(int i = 0; i < solution.sol.size() - 1; i++){
                 City city = solution.sol.get(i);
                 City toCity = solution.sol.get(i + 1);
@@ -248,8 +248,8 @@ class problem {
                     }
                 }
             }
-            if(g > 4){
-                g -= 5;
+            if(g > 0){
+                g--;
             }
         }
     }
