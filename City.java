@@ -20,7 +20,7 @@ public class City {
     public void createPath(int city1, int city2){
         for(int i = 0; i < paths.size(); i++){
             if(paths.get(i).toCity == city2){
-                paths.get(i).pheromoneCount++;
+                // paths.get(i).pheromoneCount++;
                 return;
             }
         }
@@ -28,19 +28,12 @@ public class City {
         paths.add(path);
     }
 
+    //Evaporates the pheromone counts of the paths
     public void evaporatePheromones(){
         // Percentage Evaporation
         for(Path path: paths){
-            int rate = 2; // 50%
-            path.pheromoneCount = path.pheromoneCount / rate;
-        }
-    }
-
-    public void increasePheromone(int rate){
-        if(rate != 0){
-            for(Path path: paths){
-                path.pheromoneCount += (path.pheromoneCount / rate);
-            }
+            double rate = 0.5; // 50%
+            path.pheromoneCount = (1 - rate) * path.pheromoneCount;
         }
     }
 }
