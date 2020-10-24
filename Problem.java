@@ -255,9 +255,13 @@ class problem {
     }
 
     private static void growth(ArrayList<Solution> solutions){
+        solutions.add(0, bestSolutions.get(0));
         for(int j = 0; j < solutions.size(); j++){
             Solution solution = solutions.get(j);
             double g = cityData.size() / (j + 1);
+            if(j == 0){
+                g *= 2;
+            }
             for(int i = 0; i < solution.sol.size() - 1; i++){
                 City city = solution.sol.get(i);
                 City toCity = solution.sol.get(i + 1);
