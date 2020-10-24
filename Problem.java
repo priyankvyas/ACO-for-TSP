@@ -236,9 +236,16 @@ class problem {
     }
 
     private static void growth(ArrayList<Solution> solutions){
-        int g = cityData.size() + 1;
+        double g = 0;
         solutions.add(0, bestSolutions.get(0));
-        for(Solution solution : solutions){
+        for(int j = 0; j < solutions.size(); j++){
+            Solution solution = solutions.get(j);
+            if(j == 0){
+                g = 2 * (cityData.size() / (j + 1));
+            }
+            else{
+                g = cityData.size() / (j + 1);
+            }
             for(int i = 0; i < solution.sol.size() - 1; i++){
                 City city = solution.sol.get(i);
                 City toCity = solution.sol.get(i + 1);
@@ -248,9 +255,6 @@ class problem {
                         break;
                     }
                 }
-            }
-            if(g > 0){
-                g--;
             }
         }
     }
