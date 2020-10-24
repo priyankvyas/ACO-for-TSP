@@ -17,23 +17,28 @@ public class City {
     }
 
     //Creates a list of paths based on ant solutions
-    public void createPath(int city1, int city2){
+    public void createPath(int city1, int city2, double upper){
         for(int i = 0; i < paths.size(); i++){
             if(paths.get(i).toCity == city2){
                 // paths.get(i).pheromoneCount++;
                 return;
             }
         }
-        Path path = new Path(city1, city2);
+        Path path = new Path(city1, city2, upper);
         paths.add(path);
     }
 
     //Evaporates the pheromone counts of the paths
-    public void evaporatePheromones(){
+    public void evaporatePheromones(double lower){
         // Percentage Evaporation
         for(Path path: paths){
             double rate = 0.5; // 50%
-            path.pheromoneCount = (1 - rate) * path.pheromoneCount;
+            if(path.pheromoneCount > lower){
+                path.pheromoneCount = (1 - rate) * path.pheromoneCount;
+            }
+            if(path.pheromoneCount < lower){
+                path.pheromoneCount = lower;
+            }
         }
     }
 }

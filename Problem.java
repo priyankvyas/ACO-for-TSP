@@ -1,4 +1,5 @@
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.HashMap;
 import org.jfree.data.xy.XYSeries;
@@ -28,6 +29,9 @@ class problem {
     //Creates the Colony object
     static Colony colony = new Colony();
     static ArrayList<Solution> bestSolutions = new ArrayList<>();
+    static ArrayList<Ant> bestAnts = new ArrayList<>();
+    static double upperLimit = 1000;
+    static double lowerLimit = 10;
 
     public static void main(String[] args){
         if(args.length != 2){
@@ -165,7 +169,7 @@ class problem {
 
     private static ArrayList<Solution> updateBest(ArrayList<Solution> solutionList, ArrayList<Solution> solutionBest){
         int i = 0;
-        while(solutionBest.size() <= solutionList.size()/4){
+        while(solutionBest.size() <= numAnts){
             solutionBest.add(solutionList.get(i));
             i++;
         }
@@ -177,6 +181,13 @@ class problem {
             }
         }
         return solutionBest;
+    }
+
+    private static ArrayList<Ant> findBestAnts(ArrayList<Solution> solutionBest, ArrayList<Ant> antBest){
+        for(Solution solution : solutionBest){
+            antBest.add(solution.ant);
+        }
+        return antBest;
     }
 
     //Sort the solution lists based on the scores
@@ -204,8 +215,8 @@ class problem {
             for(int j = 0; j + 1 < solutions.get(i).sol.size(); j++){
                 City fromCity = (City)solutions.get(i).sol.get(j);
                 City toCity = (City)solutions.get(i).sol.get(j + 1);
-                cityData.get(fromCity.index).createPath(fromCity.index, toCity.index);
-                cityData.get(toCity.index).createPath(toCity.index, fromCity.index);
+                cityData.get(fromCity.index).createPath(fromCity.index, toCity.index, upperLimit);
+                cityData.get(toCity.index).createPath(toCity.index, fromCity.index, upperLimit);
             }
         }
     }
@@ -230,26 +241,34 @@ class problem {
 
     public static void globalUpdatePheromone(ArrayList<Solution> solutions){
         for(City city : cityData){
-            city.evaporatePheromones();
+            city.evaporatePheromones(lowerLimit);
         }
         growth(solutions);
     }
 
     private static void growth(ArrayList<Solution> solutions){
         int g = cityData.size();
+        bestAnts = findBestAnts(bestSolutions, bestAnts);
         for(Solution solution : solutions){
-            for(int i = 0; i < solution.sol.size() - 1; i++){
-                City city = solution.sol.get(i);
-                City toCity = solution.sol.get(i + 1);
-                for(Path path : city.paths){
-                    if(path.toCity == toCity.index){
-                        path.pheromoneCount += g;
-                        break;
+            if(bestAnts.contains(solution.ant)){
+                for(int i = 0; i < solution.sol.size() - 1; i++){
+                    City city = solution.sol.get(i);
+                    City toCity = solution.sol.get(i + 1);
+                    for(Path path : city.paths){
+                        if(path.toCity == toCity.index){
+                            if(path.pheromoneCount < upperLimit){
+                                path.pheromoneCount += g;
+                            }
+                            if(path.pheromoneCount > upperLimit){
+                                path.pheromoneCount = upperLimit;
+                            }
+                            break;
+                        }
                     }
                 }
-            }
-            if(g > 0){
-                g--;
+                if(g > 0){
+                    g--;
+                }
             }
         }
     }

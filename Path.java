@@ -4,9 +4,9 @@ public class Path {
     protected int toCity;
 
     //Path object constructor
-    protected Path(int city1, int city2){
+    protected Path(int city1, int city2, double upper){
         this.fromCity = city1;
         this.toCity = city2;
-        this.pheromoneCount = 0.01;
+        this.pheromoneCount = upper;
     }
 }
