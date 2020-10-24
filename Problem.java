@@ -183,13 +183,6 @@ class problem {
         return solutionBest;
     }
 
-    private static ArrayList<Ant> findBestAnts(ArrayList<Solution> solutionBest, ArrayList<Ant> antBest){
-        for(Solution solution : solutionBest){
-            antBest.add(solution.ant);
-        }
-        return antBest;
-    }
-
     //Sort the solution lists based on the scores
     public static ArrayList<Solution> sortSolutions(ArrayList<Solution> solutions){
         ArrayList<Solution> temp = new ArrayList<>();
@@ -247,27 +240,23 @@ class problem {
     }
 
     private static void growth(ArrayList<Solution> solutions){
-        int g = cityData.size();
-        bestAnts = findBestAnts(bestSolutions, bestAnts);
-        for(Solution solution : solutions){
-            if(bestAnts.contains(solution.ant)){
-                for(int i = 0; i < solution.sol.size() - 1; i++){
-                    City city = solution.sol.get(i);
-                    City toCity = solution.sol.get(i + 1);
-                    for(Path path : city.paths){
-                        if(path.toCity == toCity.index){
-                            if(path.pheromoneCount < upperLimit){
-                                path.pheromoneCount += g;
-                            }
-                            if(path.pheromoneCount > upperLimit){
-                                path.pheromoneCount = upperLimit;
-                            }
-                            break;
+        double g = 0;
+        for(int j = 0; j < numAnts; j++){
+            Solution solution = solutions.get(j);
+            g = cityData.size() / (j + 1);
+            for(int i = 0; i < solution.sol.size() - 1; i++){
+                City city = solution.sol.get(i);
+                City toCity = solution.sol.get(i + 1);
+                for(Path path : city.paths){
+                    if(path.toCity == toCity.index){
+                        if(path.pheromoneCount < upperLimit){
+                            path.pheromoneCount += g;
                         }
+                        if(path.pheromoneCount > upperLimit){
+                            path.pheromoneCount = upperLimit;
+                        }
+                        break;
                     }
-                }
-                if(g > 0){
-                    g--;
                 }
             }
         }
