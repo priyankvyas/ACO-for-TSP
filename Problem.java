@@ -29,6 +29,8 @@ class problem {
     static Colony colony = new Colony();
     static ArrayList<Threads> threads = new ArrayList<>();
     static ArrayList<Solution> bestSolutions = new ArrayList<>();
+    static double upperLimit = 1000;
+    static double lowerLimit = 10;
 
     public static void main(String[] args){
         if(args.length != 2){
@@ -213,8 +215,8 @@ class problem {
             for(int j = 0; j + 1 < solutions.get(i).sol.size(); j++){
                 City fromCity = (City)solutions.get(i).sol.get(j);
                 City toCity = (City)solutions.get(i).sol.get(j + 1);
-                cityData.get(fromCity.index).createPath(fromCity.index, toCity.index);
-                cityData.get(toCity.index).createPath(toCity.index, fromCity.index);
+                cityData.get(fromCity.index).createPath(fromCity.index, toCity.index, upperLimit);
+                cityData.get(toCity.index).createPath(toCity.index, fromCity.index, upperLimit);
             }
         }
     }
@@ -249,25 +251,24 @@ class problem {
 
     public static void globalUpdatePheromone(ArrayList<Solution> solutions){
         for(City city : cityData){
-            city.evaporatePheromones();
+            city.evaporatePheromones(lowerLimit);
         }
         growth(solutions);
     }
 
     private static void growth(ArrayList<Solution> solutions){
-        solutions.add(0, bestSolutions.get(0));
-        for(int j = 0; j < solutions.size(); j++){
+        for(int j = 0; j < numAnts/2; j++){
             Solution solution = solutions.get(j);
             double g = cityData.size() / (j + 1);
-            if(j == 0){
-                g *= 2;
-            }
             for(int i = 0; i < solution.sol.size() - 1; i++){
                 City city = solution.sol.get(i);
                 City toCity = solution.sol.get(i + 1);
                 for(Path path : city.paths){
                     if(path.toCity == toCity.index){
                         path.pheromoneCount += g;
+                        if(path.pheromoneCount > upperLimit){
+                            path.pheromoneCount = upperLimit;
+                        }
                         break;
                     }
                 }
