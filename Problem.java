@@ -27,6 +27,7 @@ class problem {
     static int numAnts = 0;
     //Creates the Colony object
     static Colony colony = new Colony();
+    static ArrayList<Threads> threads = new ArrayList<>();
     static ArrayList<Solution> bestSolutions = new ArrayList<>();
 
     public static void main(String[] args){
@@ -119,10 +120,19 @@ class problem {
     public static void deployColony(){
         ArrayList<Solution> solutionList = new ArrayList<>();
         for(int i = 0; i < Colony.ants.size(); i++){
-            Solution solution = Colony.ants.get(i).constuctSolution();
-            // solution = localSearch(solution);
-            Colony.ants.get(i).solution = solution;
-            solutionList.add(solution);
+            Solution solution = new Solution(cityData, cityMap, Colony.ants.get(i));
+            Threads t = new Threads(solution, false);
+            t.start();
+            threads.add(t);
+        }
+        for(Threads t : threads){
+            try{
+                t.join();
+                solutionList.add(t.solution);
+            }
+            catch(InterruptedException e){
+                System.err.println("Thread interrupted");
+            }
         }
         solutionList = sortSolutions(solutionList);
         int bestScore = solutionList.get(0).score;
@@ -132,10 +142,9 @@ class problem {
         System.out.print("Initital Score: " + bestScore + "\n");
         initiatePheromone(solutionList);
         globalUpdatePheromone(solutionList);
-        //beginOptimization();
     }
 
-    private static Solution localSearch(Solution solution){
+    public static Solution localSearch(Solution solution){
         Solution initSolution = solution;
         Solution bestSolution = initSolution;
         Ant ant = initSolution.ant;
@@ -212,11 +221,21 @@ class problem {
 
     public static void beginOptimization(){
         ArrayList<Solution> solutionList = new ArrayList<>();
+        threads.removeAll(threads);
         for(int i = 0; i < Colony.ants.size(); i++){
-            Solution solution = Colony.ants.get(i).updateSolution();
-            solution = localSearch(solution);
-            Colony.ants.get(i).solution = solution;
-            solutionList.add(solution);
+            Solution solution = new Solution(cityData, cityMap, Colony.ants.get(i));
+            Threads t = new Threads(solution, true);
+            t.start();
+            threads.add(t);
+        }
+        for(Threads t : threads){
+            try{
+                t.join();
+                solutionList.add(t.solution);
+            }
+            catch(InterruptedException e){
+                System.err.println("Thread interrupted");
+            }
         }
         solutionList = sortSolutions(solutionList);
         int bestScore = solutionList.get(0).score;

@@ -16,7 +16,7 @@ public class Ant {
 
     //Ant object constructor
     public Ant(ArrayList<City> cities, HashMap<Integer, HashMap<Integer, Integer>> map, int id){
-        cityData = cities;
+        this.cityData = cities;
         sMap = sortMap(map);
         this.id = id;
     }
@@ -45,8 +45,8 @@ public class Ant {
     public Solution constuctSolution(){
         ArrayList<City> solution = new ArrayList<>();
         int startPos = id;
-        solution.add(cityData.get(startPos));
-        while(solution.size() != cityData.size()){
+        solution.add(this.cityData.get(startPos));
+        while(solution.size() != this.cityData.size()){
             HashMap<Integer, Integer> cityMap = sMap.get(startPos);
             int index = 1;
             int nextPos = (int)cityMap.keySet().toArray()[index];
@@ -54,7 +54,7 @@ public class Ant {
                 index++;
                 nextPos = (int)cityMap.keySet().toArray()[index];
             }
-            solution.add(cityData.get(nextPos));
+            solution.add(this.cityData.get(nextPos));
             startPos = nextPos;
         }
         solution.add(solution.get(0));
@@ -65,7 +65,7 @@ public class Ant {
     //Checks if the city exists in the solution already
     private boolean inSolution(int ind, ArrayList<City> solution){
         for(int i = 0; i < solution.size(); i++){
-            if(solution.get(i).index == cityData.get(ind).index){
+            if(solution.get(i).index == this.cityData.get(ind).index){
                 return true;
             }
         }
@@ -77,12 +77,12 @@ public class Ant {
         ArrayList<City> solution = new ArrayList<>();
         int startPos = id;
         Random r = new Random();
-        solution.add(cityData.get(startPos));
-        while(solution.size() != cityData.size()){
+        solution.add(this.cityData.get(startPos));
+        while(solution.size() != this.cityData.size()){
             HashMap<Integer, Integer> cityMap = sMap.get(startPos);
-            ArrayList<Path> paths = cityData.get(startPos).paths;
-            getProb(paths, cityMap);
-            paths = sortPath(paths, startPos);
+            ArrayList<Path> paths = (ArrayList<Path>)this.cityData.get(startPos).paths.clone();
+            ArrayList<City> cData = getProb(paths, cityMap);
+            paths = sortPath(paths, startPos, cData);
             double prob = r.nextDouble();
             int nextPos = 0;
             // double total = 0;
@@ -96,7 +96,7 @@ public class Ant {
             }
 
             // for(int i = 0; i < paths.size(); i++){
-            //     total += cityData.get(paths.get(i).toCity).prob;
+            //     total += this.cityData.get(paths.get(i).toCity).prob;
             //     if(total > prob && !inSolution(paths.get(i).toCity, solution)){
             //         nextPos = paths.get(i).toCity;
             //         break;
@@ -110,7 +110,7 @@ public class Ant {
                     System.out.print("Here");
                 }
             }
-            solution.add(cityData.get(nextPos));
+            solution.add(this.cityData.get(nextPos));
             startPos = nextPos;
             resetProb();
         }
@@ -119,13 +119,14 @@ public class Ant {
         return this.solution;
     }
 
-    private void getProb(ArrayList<Path> paths, HashMap<Integer, Integer> cityMap){
+    private ArrayList<City> getProb(ArrayList<Path> paths, HashMap<Integer, Integer> cityMap){
         Object[] map = cityMap.keySet().toArray();
+        ArrayList<City> cData = (ArrayList<City>)cityData.clone();
         double total = 0;
         double alpha = 0.5;
         double beta = 0.5;
         for(Path path : paths){
-            cityData.get(path.toCity).prob += Math.pow(path.pheromoneCount, alpha);
+            cData.get(path.toCity).prob += Math.pow(path.pheromoneCount, alpha);
             double rank = 0;
             for(int i = 0; i < map.length; i++){
                 if((int)map[i] == path.toCity){
@@ -133,22 +134,22 @@ public class Ant {
                     break;
                 }
             }
-            cityData.get(path.toCity).prob /= Math.pow(rank, beta);
-            total += cityData.get(path.toCity).prob;
+            cData.get(path.toCity).prob /= Math.pow(rank, beta);
+            total += cData.get(path.toCity).prob;
         }
         for(Path path : paths){
-            cityData.get(path.toCity).prob /= total; 
+            cData.get(path.toCity).prob /= total; 
         }
-
+        return cData;
     }
 
-    private ArrayList<Path> sortPath(ArrayList<Path> paths, int ind){
+    private ArrayList<Path> sortPath(ArrayList<Path> paths, int ind, ArrayList<City> cData){
         ArrayList<Path> temp = new ArrayList<>();
         while(paths.size() != 0){
             double prob = 0;
             Path best = paths.get(0);
             for(int i = 0; i < paths.size(); i++){
-                double newProb = cityData.get(paths.get(i).toCity).prob;
+                double newProb = cData.get(paths.get(i).toCity).prob;
                 if(newProb >= prob){
                     prob = newProb;
                     best = paths.get(i);
@@ -157,7 +158,7 @@ public class Ant {
             temp.add(best);
             paths.remove(paths.indexOf(best));
         }
-        cityData.get(ind).paths = temp;
+        cData.get(ind).paths = temp;
         return temp;
     }
 
@@ -173,7 +174,7 @@ public class Ant {
     
     //Clears all the probabilities for a different cities distribution
     private void resetProb(){
-        for(City city : cityData){
+        for(City city : this.cityData){
             city.prob = 0;
         }
     }
