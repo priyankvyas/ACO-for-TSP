@@ -26,9 +26,10 @@ class problem {
     //Number of ants in the colony
     static int numAnts = 0;
     //Creates the Colony object
-    static Colony colony = new Colony();
     static ArrayList<Threads> threads = new ArrayList<>();
     static ArrayList<Solution> bestSolutions = new ArrayList<>();
+    static Solution globalBestSolution;
+    static int globalBest = 0;
 
     public static void main(String[] args){
         if(args.length != 2){
@@ -40,7 +41,6 @@ class problem {
         dataArray = getCoords(dataArray);
         cityData = plotCities(dataArray);
         cityMap = createHashMap(cityData);
-        initiateColony();
         Plot plot = new Plot("Cities");
         plot.setSize(800,400);
         plot.setLocationRelativeTo(null);
@@ -109,39 +109,61 @@ class problem {
         return map;
     }
 
-    //Creates a number of ants and adds them to the colony
-    public static void initiateColony(){
-        for(int i = 0; i < cityData.size(); i++){
-            Ant ant = new Ant(cityData, cityMap, i);
-            Colony.ants.add(ant);
+    public static ArrayList<City> createShallow(){
+        ArrayList<City> shallowCity = new ArrayList<>();
+        for(City city : cityData){
+            shallowCity.add((City)city.clone());
         }
+        return shallowCity;
     }
 
-    public static void deployColony(){
-        ArrayList<Solution> solutionList = new ArrayList<>();
-        for(int i = 0; i < Colony.ants.size(); i++){
-            Solution solution = new Solution(cityData, cityMap, Colony.ants.get(i));
-            Threads t = new Threads(solution, false);
+    public static Solution deployColony(){
+        ArrayList<ArrayList<City>> pheromoneMaps = new ArrayList<>();
+        for(int i = 0; i < numAnts; i++){
+            ArrayList<City> cities = createShallow();
+            Ant ant = new Ant(cities, cityMap, i);
+            Threads t = new Threads(cities, false, ant);
             t.start();
             threads.add(t);
         }
+        int bestScore = 1000000;
+        Solution bestSolution = new Solution(cityData, cityMap, new Ant(cityData, cityMap, 0));
         for(Threads t : threads){
             try{
                 t.join();
-                solutionList.add(t.solution);
+                for(Solution solution : t.bestSolutions){
+                    if(solution.score <= bestScore){
+                        bestScore = solution.score;
+                        bestSolution = solution;
+                    }
+                }
+                pheromoneMaps.add(t.cities);
             }
             catch(InterruptedException e){
                 System.err.println("Thread interrupted");
             }
         }
-        solutionList = sortSolutions(solutionList);
-        int bestScore = solutionList.get(0).score;
-        Solution bestSolution = solutionList.get(0);
-        Colony.bestAnt = bestSolution.ant;
-        bestSolutions = updateBest(solutionList, bestSolutions);
+        for(ArrayList<City> map : pheromoneMaps){
+            for(int i = 0; i < map.size(); i++){
+                City city = map.get(i);
+                City avgCity = cityData.get(i);
+                for(int j = 0; j < city.paths.size(); j++){
+                    Path path = city.paths.get(j);
+                    if(avgCity.inCity(path)){
+                        avgCity.getPath(path).pheromoneCount += path.pheromoneCount;
+                        avgCity.getPath(path).pheromoneCount /= 2;
+                    }
+                    else{
+                        avgCity.createPath(avgCity.index, path.toCity);
+                        cityData.get(path.toCity).createPath(path.toCity, avgCity.index);
+                    }
+                }
+            }
+        }
         System.out.print("Initital Score: " + bestScore + "\n");
-        initiatePheromone(solutionList);
-        globalUpdatePheromone(solutionList);
+        globalBest = bestScore;
+        globalBestSolution = bestSolution;
+        return bestSolution;
     }
 
     public static Solution localSearch(Solution solution){
@@ -172,9 +194,9 @@ class problem {
         return bestSolution;
     }
 
-    private static ArrayList<Solution> updateBest(ArrayList<Solution> solutionList, ArrayList<Solution> solutionBest){
+    public static ArrayList<Solution> updateBest(ArrayList<Solution> solutionList, ArrayList<Solution> solutionBest){
         int i = 0;
-        while(solutionBest.size() <= solutionList.size()/4){
+        while(solutionBest.size() < solutionList.size()){
             solutionBest.add(solutionList.get(i));
             i++;
         }
@@ -208,55 +230,82 @@ class problem {
     }
 
     //Initiates the pheromone counts for all the paths taken
-    public static void initiatePheromone(ArrayList<Solution> solutions){
+    public static ArrayList<City> initiatePheromone(ArrayList<Solution> solutions, ArrayList<City> cities){
         for(int i = 0; i < solutions.size(); i++){
             for(int j = 0; j + 1 < solutions.get(i).sol.size(); j++){
                 City fromCity = (City)solutions.get(i).sol.get(j);
                 City toCity = (City)solutions.get(i).sol.get(j + 1);
-                cityData.get(fromCity.index).createPath(fromCity.index, toCity.index);
-                cityData.get(toCity.index).createPath(toCity.index, fromCity.index);
+                cities.get(fromCity.index).createPath(fromCity.index, toCity.index);
+                cities.get(toCity.index).createPath(toCity.index, fromCity.index);
             }
         }
+        return cities;
     }
 
-    public static void beginOptimization(){
-        ArrayList<Solution> solutionList = new ArrayList<>();
+    public static Solution beginOptimization(){
+        ArrayList<ArrayList<City>> pheromoneMaps = new ArrayList<>();
         threads.removeAll(threads);
-        for(int i = 0; i < Colony.ants.size(); i++){
-            Solution solution = new Solution(cityData, cityMap, Colony.ants.get(i));
-            Threads t = new Threads(solution, true);
+        for(int i = 0; i < numAnts; i++){
+            ArrayList<City> cities = createShallow();
+            Ant ant = new Ant(cities, cityMap, i);
+            Threads t = new Threads(cities, true, ant);
             t.start();
             threads.add(t);
         }
+        int bestScore = 1000000;
+        Solution bestSolution = new Solution(cityData, cityMap, new Ant(cityData, cityMap, 0));
         for(Threads t : threads){
             try{
                 t.join();
-                solutionList.add(t.solution);
+                for(Solution solution : t.bestSolutions){
+                    if(solution.score <= bestScore){
+                        bestScore = solution.score;
+                        bestSolution = solution;
+                    }
+                }
+                pheromoneMaps.add(t.cities);
             }
             catch(InterruptedException e){
                 System.err.println("Thread interrupted");
             }
         }
-        solutionList = sortSolutions(solutionList);
-        int bestScore = solutionList.get(0).score;
-        Solution bestSolution = solutionList.get(0);
-        Colony.bestAnt = bestSolution.ant;
-        bestSolutions = updateBest(solutionList, bestSolutions);
+        for(ArrayList<City> map : pheromoneMaps){
+            for(int i = 0; i < map.size(); i++){
+                City city = map.get(i);
+                City avgCity = cityData.get(i);
+                for(int j = 0; j < city.paths.size(); j++){
+                    Path path = city.paths.get(j);
+                    if(avgCity.inCity(path)){
+                        avgCity.getPath(path).pheromoneCount += path.pheromoneCount;
+                        avgCity.getPath(path).pheromoneCount /= 2;
+                    }
+                    else{
+                        avgCity.createPath(avgCity.index, path.toCity);
+                        cityData.get(path.toCity).createPath(path.toCity, avgCity.index);
+                    }
+                }
+            }
+        }
         System.out.print("Best Score: " + bestScore + "\n");
-        initiatePheromone(solutionList);
-        globalUpdatePheromone(solutionList);
+        if(bestScore < globalBest){
+            globalBest = bestScore;
+            globalBestSolution = bestSolution;
+        }
+        return bestSolution;
     }
 
-    public static void globalUpdatePheromone(ArrayList<Solution> solutions){
-        for(City city : cityData){
+    public static ArrayList<City> globalUpdatePheromone(ArrayList<Solution> solutions, ArrayList<City> cities){
+        for(City city : cities){
             city.evaporatePheromones();
         }
-        growth();
+        growth(solutions);
+        return cities;
     }
 
-    private static void growth(){
-        int g = cityData.size();
-        for(Solution solution : bestSolutions){
+    private static void growth(ArrayList<Solution> solutions){
+        for(int j = 0; j < solutions.size(); j++){
+            Solution solution = solutions.get(j);
+            double g = cityData.size() / (j + 1);
             for(int i = 0; i < solution.sol.size() - 1; i++){
                 City city = solution.sol.get(i);
                 City toCity = solution.sol.get(i + 1);
@@ -266,9 +315,6 @@ class problem {
                         break;
                     }
                 }
-            }
-            if(g > 4){
-                g -= 5;
             }
         }
     }
@@ -284,27 +330,29 @@ class problem {
         
         public Plot(String title){
             super(title);
+            Solution solution = new Solution(cityData, cityMap, new Ant(cityData, cityMap, 0));
             scatterplot.setBackgroundPaint(new Color(255,255,255));
             panel.addChartMouseListener(new ChartMouseListener(){
                 @Override
                 public void chartMouseClicked(ChartMouseEvent me){
                     if(me.getTrigger().getButton() == java.awt.event.MouseEvent.BUTTON1){
                         int i = 0;
+                        Solution solution = new Solution(cityData, cityMap, new Ant(cityData, cityMap, 0));
                         while(i != 100){
                             if(renderer.getSeriesLinesVisible(0) == null || !renderer.getSeriesLinesVisible(0)){
-                                deployColony();
+                                solution = deployColony();
                             }
                             else{
-                                beginOptimization();
+                                solution = beginOptimization();
                             }
                             i++;
-                            scatterplot.setDataset(createDataset(Colony.bestAnt.solution.sol));
+                            scatterplot.setDataset(createDataset(solution.sol));
                             renderer.setSeriesLinesVisible(0, true);
                             scatterplot.setRenderer(renderer);
                             setContentPane(panel);
                         }
-                        scatterplot.setDataset(createDataset(bestSolutions.get(0).sol));
-                        System.out.print("Final Score: " + bestSolutions.get(0).score + "\n");
+                        scatterplot.setDataset(createDataset(globalBestSolution.sol));
+                        System.out.print("Final Score: " + globalBest + "\n");
                         renderer.setSeriesLinesVisible(0, true);
                         scatterplot.setRenderer(renderer);
                         setContentPane(panel);
@@ -330,7 +378,7 @@ class problem {
                             XYItemEntity i = (XYItemEntity)me.getEntity();
                             double xAnnot = scatterplot.getDataset().getXValue(i.getSeriesIndex(), i.getItem());
                             double yAnnot = scatterplot.getDataset().getYValue(i.getSeriesIndex(), i.getItem());
-                            annot = new XYTextAnnotation(Integer.toString(Colony.bestAnt.solution.sol.get(i.getItem()).index + 1), xAnnot, yAnnot + 100);
+                            annot = new XYTextAnnotation(Integer.toString(solution.sol.get(i.getItem()).index + 1), xAnnot, yAnnot + 100);
                             scatterplot.addAnnotation(annot);
                         }
                     }

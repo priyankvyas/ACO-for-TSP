@@ -36,4 +36,33 @@ public class City {
             path.pheromoneCount = (1 - rate) * path.pheromoneCount;
         }
     }
+
+    public boolean inCity(Path path){
+        for(Path cpath : this.paths){
+            if(cpath.toCity == path.toCity){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Path getPath(Path path){
+        for(Path cpath : this.paths){
+            if(cpath.toCity == path.toCity){
+                return cpath;
+            }
+        }
+        return new Path(this.index, this.index);
+    }
+
+    public City clone(){
+        City city = new City(this.xCoord, this.yCoord, this.index);
+        city.paths = new ArrayList<>();
+        for(Path path : this.paths){
+            Path newPath = new Path(path.fromCity, path.toCity);
+            newPath.pheromoneCount = path.pheromoneCount;
+            city.paths.add(newPath);
+        }
+        return city;
+    }
 }

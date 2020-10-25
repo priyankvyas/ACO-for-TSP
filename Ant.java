@@ -44,7 +44,8 @@ public class Ant {
     //Create a Solution based on the Nearest Neighbour heuristic 
     public Solution constuctSolution(){
         ArrayList<City> solution = new ArrayList<>();
-        int startPos = id;
+        Random r = new Random();
+        int startPos = r.nextInt(cityData.size());
         solution.add(this.cityData.get(startPos));
         while(solution.size() != this.cityData.size()){
             HashMap<Integer, Integer> cityMap = sMap.get(startPos);
@@ -75,8 +76,8 @@ public class Ant {
     //Creates a new solution based on the probabilities of the heuristic and the pheromone
     public Solution updateSolution(){
         ArrayList<City> solution = new ArrayList<>();
-        int startPos = id;
         Random r = new Random();
+        int startPos = r.nextInt(cityData.size());
         solution.add(this.cityData.get(startPos));
         while(solution.size() != this.cityData.size()){
             HashMap<Integer, Integer> cityMap = sMap.get(startPos);
@@ -85,29 +86,21 @@ public class Ant {
             paths = sortPath(paths, startPos, cData);
             double prob = r.nextDouble();
             int nextPos = 0;
-            // double total = 0;
-            int total = 0;
-            while(total < paths.size()){
-                if(!inSolution(paths.get(total).toCity, solution)){
-                    nextPos = paths.get(total).toCity;
+            double total = 0;
+            for(int i = 0; i < paths.size(); i++){
+                total += this.cityData.get(paths.get(i).toCity).prob;
+                if(total > prob && !inSolution(paths.get(i).toCity, solution)){
+                    nextPos = paths.get(i).toCity;
                     break;
                 }
-                total++;
+                else if(total > prob && inSolution(paths.get(i).toCity, solution)){
+                    nextPos = getNearest(cityMap, solution);
+                    break;
+                }
             }
-
-            // for(int i = 0; i < paths.size(); i++){
-            //     total += this.cityData.get(paths.get(i).toCity).prob;
-            //     if(total > prob && !inSolution(paths.get(i).toCity, solution)){
-            //         nextPos = paths.get(i).toCity;
-            //         break;
-            //     }
-            // }
             if(nextPos == 0){
                 if(inSolution(nextPos, solution)){
                     nextPos = getNearest(cityMap, solution);
-                }
-                if(nextPos == -1){
-                    System.out.print("Here");
                 }
             }
             solution.add(this.cityData.get(nextPos));

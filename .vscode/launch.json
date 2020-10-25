@@ -9,14 +9,14 @@
             "name": "Debug (Launch) - Current File",
             "request": "launch",
             "mainClass": "${file}",
-            "args": "kroA100.tsp.txt 100"
+            "args": "kroA100.tsp.txt 10"
         },
         {
             "type": "java",
             "name": "Debug (Launch)-problem<ACO_705f2adb>",
             "request": "launch",
             "mainClass": "problem",
-            "args": "kroA100.tsp.txt 100",
+            "args": "kroA100.tsp.txt 10",
             "projectName": "ACO_705f2adb"
         }
     ]
