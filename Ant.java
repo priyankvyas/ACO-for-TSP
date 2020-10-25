@@ -1,13 +1,7 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+//Importing all the required packages for the ant class
+import java.util.*;
 
+///Ant object that handles the construction of the solutions
 public class Ant {
     protected ArrayList<City> cityData;
     protected HashMap<Integer, HashMap<Integer, Integer>> sMap;
@@ -85,29 +79,21 @@ public class Ant {
             paths = sortPath(paths, startPos);
             double prob = r.nextDouble();
             int nextPos = 0;
-            // double total = 0;
-            int total = 0;
-            while(total < paths.size()){
-                if(!inSolution(paths.get(total).toCity, solution)){
-                    nextPos = paths.get(total).toCity;
+            double total = 0;
+            for(int i = 0; i < paths.size(); i++){
+                total += cityData.get(paths.get(i).toCity).prob;
+                if(total > prob && !inSolution(paths.get(i).toCity, solution)){
+                    nextPos = paths.get(i).toCity;
                     break;
                 }
-                total++;
+                if(total > prob && inSolution(paths.get(i).toCity, solution)){
+                    nextPos = getNearest(cityMap, solution);
+                    break;
+                }
             }
-
-            // for(int i = 0; i < paths.size(); i++){
-            //     total += cityData.get(paths.get(i).toCity).prob;
-            //     if(total > prob && !inSolution(paths.get(i).toCity, solution)){
-            //         nextPos = paths.get(i).toCity;
-            //         break;
-            //     }
-            // }
             if(nextPos == 0){
                 if(inSolution(nextPos, solution)){
                     nextPos = getNearest(cityMap, solution);
-                }
-                if(nextPos == -1){
-                    System.out.print("Here");
                 }
             }
             solution.add(cityData.get(nextPos));
@@ -119,6 +105,7 @@ public class Ant {
         return this.solution;
     }
 
+    //Calculates the probability of the city being chosen based on the pheromone deposits
     private void getProb(ArrayList<Path> paths, HashMap<Integer, Integer> cityMap){
         Object[] map = cityMap.keySet().toArray();
         double total = 0;
@@ -142,6 +129,7 @@ public class Ant {
 
     }
 
+    //Sorts the list of paths of the city based on their pheromone values
     private ArrayList<Path> sortPath(ArrayList<Path> paths, int ind){
         ArrayList<Path> temp = new ArrayList<>();
         while(paths.size() != 0){
@@ -161,6 +149,7 @@ public class Ant {
         return temp;
     }
 
+    //Gets the next nearest city to a given city that is not present in the solution
     private int getNearest(HashMap<Integer, Integer> cityMap, ArrayList<City> solution){
         Object[] map = cityMap.keySet().toArray();
         for(int i = 0; i < map.length; i++){

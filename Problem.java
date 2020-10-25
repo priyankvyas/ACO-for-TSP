@@ -1,6 +1,6 @@
+//Importing all the required packages for the problem class
 import java.io.*;
 import java.util.*;
-import java.util.HashMap;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -16,6 +16,7 @@ import org.jfree.chart.annotations.XYTextAnnotation;
 import java.awt.*; 
 import javax.swing.*; 
 
+///Serial version of the Ant System algorithm for the symmetric travelling salesperson problem
 class problem {
     //Contains the data from the file
     static ArrayList<String> dataArray = new ArrayList<String>();
@@ -23,19 +24,20 @@ class problem {
     static ArrayList<City> cityData = new ArrayList<>();
     //Contains the distance between every pair of cities on the map
     static HashMap<Integer, HashMap<Integer, Integer>> cityMap = new HashMap<>();
-    //Number of ants in the colony
-    static int numAnts = 0;
     //Creates the Colony object
     static Colony colony = new Colony();
+    //Contains the best solutions found throughout the run
     static ArrayList<Solution> bestSolutions = new ArrayList<>();
 
     public static void main(String[] args){
-        if(args.length != 2){
-            System.err.println("Usage: java problem <filename> <numAnts>");
+        //Parse in the filename
+        if(args.length != 1){
+            System.err.println("Usage: java problem <filename>");
         }
+        //Read the problem set file
         String file = args[0];
-        numAnts = Integer.parseInt(args[1]);
         readFile(file);
+        //Parse the data and create a 2D scatter plot of the cities
         dataArray = getCoords(dataArray);
         cityData = plotCities(dataArray);
         cityMap = createHashMap(cityData);
@@ -116,11 +118,11 @@ class problem {
         }
     }
 
+    //Starts the initial ant solution construction and updates the pheromones
     public static void deployColony(){
         ArrayList<Solution> solutionList = new ArrayList<>();
         for(int i = 0; i < Colony.ants.size(); i++){
             Solution solution = Colony.ants.get(i).constuctSolution();
-            // solution = localSearch(solution);
             Colony.ants.get(i).solution = solution;
             solutionList.add(solution);
         }
@@ -132,9 +134,10 @@ class problem {
         System.out.print("Initital Score: " + bestScore + "\n");
         initiatePheromone(solutionList);
         globalUpdatePheromone(solutionList);
-        //beginOptimization();
     }
 
+    //Performs the 2-opt local search on the ant solution to get the best improvement solution in
+    //the neighbourhood
     private static Solution localSearch(Solution solution){
         Solution initSolution = solution;
         Solution bestSolution = initSolution;
@@ -143,6 +146,7 @@ class problem {
         int bestScore = bestSolution.score;
         for(int i = 0; i < initSolution.sol.size() - 1; i++){
             for(int j = i + 2; j < initSolution.sol.size() - 2; j++){
+                @SuppressWarnings("unchecked")
                 ArrayList<City> temp = (ArrayList<City>)initSolution.sol.clone();
                 City end1 = temp.get(i + 1);
                 City end2 = temp.get(j);
@@ -163,6 +167,8 @@ class problem {
         return bestSolution;
     }
 
+    //Updates the list of best solutions by adding new solutions and sorting it to keep the list
+    //size constant
     private static ArrayList<Solution> updateBest(ArrayList<Solution> solutionList, ArrayList<Solution> solutionBest){
         int i = 0;
         while(solutionBest.size() <= solutionList.size()/4){
@@ -210,6 +216,8 @@ class problem {
         }
     }
 
+    //Optimization method of ant colony that creates updated solutions based on the pheromone
+    //deposited by the ants
     public static void beginOptimization(){
         ArrayList<Solution> solutionList = new ArrayList<>();
         for(int i = 0; i < Colony.ants.size(); i++){
@@ -228,16 +236,20 @@ class problem {
         globalUpdatePheromone(solutionList);
     }
 
+    //Updates the pheromone values after each iteration of solution creation
     public static void globalUpdatePheromone(ArrayList<Solution> solutions){
         for(City city : cityData){
             city.evaporatePheromones();
         }
-        growth();
+        growth(solutions);
     }
 
-    private static void growth(){
-        int g = cityData.size();
-        for(Solution solution : bestSolutions){
+    //Growth function of the pheromone update rule to increment pheromone values of good
+    //solutions
+    private static void growth(ArrayList<Solution> solutions){
+        for(int j = 0; j < solutions.size(); j++){
+            Solution solution = solutions.get(j);
+            double g = cityData.size()/(j + 1);        
             for(int i = 0; i < solution.sol.size() - 1; i++){
                 City city = solution.sol.get(i);
                 City toCity = solution.sol.get(i + 1);
@@ -248,12 +260,10 @@ class problem {
                     }
                 }
             }
-            if(g > 4){
-                g -= 5;
-            }
         }
     }
 
+    ///Plot class of that creates the visualization of the problem set and the solution
     protected static class Plot extends JFrame{
         private static final long serialVersionUID = 6294689542092367723L;
         XYTextAnnotation annot;
@@ -263,6 +273,7 @@ class problem {
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
         ChartPanel panel = new ChartPanel(chart);
         
+        //Plot constructor object that handles the event listener
         public Plot(String title){
             super(title);
             scatterplot.setBackgroundPaint(new Color(255,255,255));
@@ -271,7 +282,7 @@ class problem {
                 public void chartMouseClicked(ChartMouseEvent me){
                     if(me.getTrigger().getButton() == java.awt.event.MouseEvent.BUTTON1){
                         int i = 0;
-                        while(i != 100){
+                        while(i != 1000){
                             if(renderer.getSeriesLinesVisible(0) == null || !renderer.getSeriesLinesVisible(0)){
                                 deployColony();
                             }
@@ -320,6 +331,7 @@ class problem {
             setContentPane(panel);
         }
 
+        //Creates the datapoints for the scatter plot based on the provided list of cities in order
         private XYDataset createDataset(ArrayList<City> dataArray){
             XYSeriesCollection dataset = new XYSeriesCollection();
             XYSeries series = new XYSeries("Cities", false);
