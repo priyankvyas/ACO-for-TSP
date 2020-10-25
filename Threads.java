@@ -1,47 +1,21 @@
 import java.util.ArrayList;
 
 public class Threads extends Thread {
-    public ArrayList<City> cities;
     public boolean isUpdate;
-    public Ant ant;
-    public int bestScore;
-    public ArrayList<City> xcity;
-    public ArrayList<Solution> bestSolutions = new ArrayList<>();
-    public Threads(ArrayList<City> city, boolean isUpdate, Ant ant){
-        this.cities = city;
+    public Solution solution;
+    public Threads(Solution solution, boolean isUpdate){
+        this.solution = solution;
         this.isUpdate = isUpdate;
-        this.ant = ant;
     }
 
     public void run(){
         if(!this.isUpdate){
-            ArrayList<Solution> solutionList = new ArrayList<>();
-            ArrayList<City> cityData = this.cities;
-            for(int i = 0; i < 2; i++){
-                Solution solution = this.ant.constuctSolution();
-                solutionList.add(solution);
-            }
-            solutionList = problem.sortSolutions(solutionList);
-            this.bestSolutions = problem.updateBest(solutionList, this.bestSolutions);
-            this.bestScore = this.bestSolutions.get(0).score;
-            cityData = problem.initiatePheromone(solutionList, cityData);
-            cityData = problem.globalUpdatePheromone(solutionList, cityData);
-            this.cities = cityData;
+            this.solution = this.solution.ant.constuctSolution();
         }
         else{
-            ArrayList<Solution> solutionList = new ArrayList<>();
-            ArrayList<City> cityData = this.cities;
-            for(int i = 0; i < 2; i++){
-                Solution solution = this.ant.updateSolution();
-                solution = problem.localSearch(solution);
-                solutionList.add(solution);
-            }
-            solutionList = problem.sortSolutions(solutionList);
-            this.bestSolutions = problem.updateBest(solutionList, this.bestSolutions);
-            this.bestScore = this.bestSolutions.get(0).score;
-            cityData = problem.initiatePheromone(solutionList, cityData);
-            cityData = problem.globalUpdatePheromone(solutionList, cityData);
-            this.cities = cityData;
+            this.solution = this.solution.ant.updateSolution();
+            this.solution = problem.localSearch(this.solution);
         }
+        this.solution.ant.solution = this.solution;
     }
 }
