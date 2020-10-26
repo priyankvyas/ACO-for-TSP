@@ -1,3 +1,5 @@
+//Priyank_1297953_Sivaram_1299026
+
 //Importing all the required packages for the problem class
 import java.io.*;
 import java.util.*;
@@ -127,7 +129,7 @@ class problem {
     //Deploys the sub-colony threads
     public static void deployColonies(){
         ArrayList<ArrayList<City>> pheromoneMaps = new ArrayList<>();
-        for(int i = 0; i < 4; i++){
+        for(int i = 0; i < numColony; i++){
             ArrayList<City> cities = createShallow(cityData);
             ColonyThread ct = new ColonyThread(cities, i);
             ct.start();
@@ -350,7 +352,9 @@ class problem {
                 public void chartMouseClicked(ChartMouseEvent me){
                     if(me.getTrigger().getButton() == java.awt.event.MouseEvent.BUTTON1){
                         int i = 0;
-                        while(i != 10){
+                        long start = System.currentTimeMillis();
+                        System.out.println("Start time: " + start);
+                        while(i != 5){
                             if(renderer.getSeriesLinesVisible(0) == null || !renderer.getSeriesLinesVisible(0)){
                                 deployColonies();
                             }
@@ -358,6 +362,7 @@ class problem {
                         }
                         scatterplot.setDataset(createDataset(globalBestSolution.sol));
                         System.out.print("Final Score: " + globalBest + "\n");
+                        System.out.println("Time elapsed: " + (start - System.currentTimeMillis()));
                         renderer.setSeriesLinesVisible(0, true);
                         scatterplot.setRenderer(renderer);
                         setContentPane(panel);
