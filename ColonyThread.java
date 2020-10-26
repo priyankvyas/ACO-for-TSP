@@ -1,15 +1,21 @@
+//Importing all the required packages for the Colony thread
 import java.util.ArrayList;
 
+///Colony thread that runs a sub-colony using the pheromone values given by the main thread
 public class ColonyThread extends Thread{
     public ArrayList<City> cities;
     public int id;
     public int bestScore;
     public Solution bestSolution;
+
+    //Colony thread constructor
     public ColonyThread(ArrayList<City> city, int id){
         this.cities = city;
         this.id = id;
     }
 
+    //Runs the optimization on the sub-colony
+    @SuppressWarnings("unchecked")
     public void run(){
         ArrayList<Object> returnValue = new ArrayList<>();
         returnValue = problem.deployColony(this.cities);
