@@ -1,6 +1,6 @@
+//Importing all the required packages for the problem class
 import java.io.*;
 import java.util.*;
-import java.util.HashMap;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -16,6 +16,7 @@ import org.jfree.chart.annotations.XYTextAnnotation;
 import java.awt.*; 
 import javax.swing.*; 
 
+///Serial version of the Ant System using the elitist strategy for the symmetric travelling salesperson problem
 class problem {
     //Contains the data from the file
     static ArrayList<String> dataArray = new ArrayList<String>();
@@ -23,23 +24,23 @@ class problem {
     static ArrayList<City> cityData = new ArrayList<>();
     //Contains the distance between every pair of cities on the map
     static HashMap<Integer, HashMap<Integer, Integer>> cityMap = new HashMap<>();
-    //Number of ants in the colony
-    static int numAnts = 0;
     //Creates the Colony object
     static Colony colony = new Colony();
+    //Contains all the best solutions found throughout the run
     static ArrayList<Solution> bestSolutions = new ArrayList<>();
 
     public static void main(String[] args){
-        if(args.length != 2){
-            System.err.println("Usage: java problem <filename> <numAnts>");
+        if(args.length != 1){
+            System.err.println("Usage: java problem <filename>");
         }
+        //Read in the data and parse it into the member variables
         String file = args[0];
-        numAnts = Integer.parseInt(args[1]);
         readFile(file);
         dataArray = getCoords(dataArray);
         cityData = plotCities(dataArray);
         cityMap = createHashMap(cityData);
         initiateColony();
+        //Plot the cities on a 2D scatter plot
         Plot plot = new Plot("Cities");
         plot.setSize(800,400);
         plot.setLocationRelativeTo(null);
@@ -116,11 +117,11 @@ class problem {
         }
     }
 
+    //Starts the colony and constructs the initial solutions using nearest neighbours
     public static void deployColony(){
         ArrayList<Solution> solutionList = new ArrayList<>();
         for(int i = 0; i < Colony.ants.size(); i++){
             Solution solution = Colony.ants.get(i).constuctSolution();
-            // solution = localSearch(solution);
             Colony.ants.get(i).solution = solution;
             solutionList.add(solution);
         }
@@ -132,9 +133,9 @@ class problem {
         System.out.print("Initital Score: " + bestScore + "\n");
         initiatePheromone(solutionList);
         globalUpdatePheromone(solutionList);
-        //beginOptimization();
     }
 
+    //Runs local search on the solutions to find the best improvement solution in the 2-opt neighbourhood
     private static Solution localSearch(Solution solution){
         Solution initSolution = solution;
         Solution bestSolution = initSolution;
@@ -143,6 +144,7 @@ class problem {
         int bestScore = bestSolution.score;
         for(int i = 0; i < initSolution.sol.size() - 1; i++){
             for(int j = i + 2; j < initSolution.sol.size() - 2; j++){
+                @SuppressWarnings("unchecked")
                 ArrayList<City> temp = (ArrayList<City>)initSolution.sol.clone();
                 City end1 = temp.get(i + 1);
                 City end2 = temp.get(j);
@@ -163,6 +165,7 @@ class problem {
         return bestSolution;
     }
 
+    //Updates the list of best solutions
     private static ArrayList<Solution> updateBest(ArrayList<Solution> solutionList, ArrayList<Solution> solutionBest){
         int i = 0;
         while(solutionBest.size() <= solutionList.size()/4){
@@ -210,6 +213,7 @@ class problem {
         }
     }
 
+    //Deploys the ants to create new solutions based on the pheromone deposits
     public static void beginOptimization(){
         ArrayList<Solution> solutionList = new ArrayList<>();
         for(int i = 0; i < Colony.ants.size(); i++){
@@ -228,6 +232,7 @@ class problem {
         globalUpdatePheromone(solutionList);
     }
 
+    //Updates the pheromone values for the next iteration
     public static void globalUpdatePheromone(ArrayList<Solution> solutions){
         for(City city : cityData){
             city.evaporatePheromones();
@@ -235,6 +240,7 @@ class problem {
         growth(solutions);
     }
 
+    //Growth function with the elitist strategy
     private static void growth(ArrayList<Solution> solutions){
         double g = 0;
         solutions.add(0, bestSolutions.get(0));
@@ -259,6 +265,7 @@ class problem {
         }
     }
 
+    //Plot class that visualizes the problem set and the solutions
     protected static class Plot extends JFrame{
         private static final long serialVersionUID = 6294689542092367723L;
         XYTextAnnotation annot;
@@ -268,6 +275,7 @@ class problem {
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
         ChartPanel panel = new ChartPanel(chart);
         
+        //Plot object that handles the events of the plot
         public Plot(String title){
             super(title);
             scatterplot.setBackgroundPaint(new Color(255,255,255));
@@ -325,6 +333,7 @@ class problem {
             setContentPane(panel);
         }
 
+        //Creates the datapoints from the given list of cities
         private XYDataset createDataset(ArrayList<City> dataArray){
             XYSeriesCollection dataset = new XYSeriesCollection();
             XYSeries series = new XYSeries("Cities", false);

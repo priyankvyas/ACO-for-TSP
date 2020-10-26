@@ -1,6 +1,7 @@
-import java.util.ArrayList;
-import java.util.HashMap;
+//Importing all the required packages for the Solution object
+import java.util.*;
 
+///Solution object that represents the solution to the problem created by the ants
 public class Solution {
     protected ArrayList<City> sol;
     protected int score;
