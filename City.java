@@ -1,12 +1,12 @@
+//Importing all the required packages for the city object
 import java.util.ArrayList;
-// import java.util.Random;
 
+///City object that represents the datapoint of the city in the problem set
 public class City {
     protected int xCoord;
     protected int yCoord;
     protected int index;
     protected ArrayList<Path> paths = new ArrayList<>();
-
     double prob;
     
     //City object constructor
@@ -37,6 +37,7 @@ public class City {
         }
     }
 
+    //Checks if the path is already in the list of paths for the city
     public boolean inCity(Path path){
         for(Path cpath : this.paths){
             if(cpath.toCity == path.toCity){
@@ -46,6 +47,7 @@ public class City {
         return false;
     }
 
+    //Returns a duplicate path object of the given path
     public Path getPath(Path path){
         for(Path cpath : this.paths){
             if(cpath.toCity == path.toCity){
@@ -55,6 +57,7 @@ public class City {
         return new Path(this.index, this.index);
     }
 
+    //Creates a clone of the City object
     public City clone(){
         City city = new City(this.xCoord, this.yCoord, this.index);
         city.paths = new ArrayList<>();

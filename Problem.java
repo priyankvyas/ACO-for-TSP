@@ -1,6 +1,6 @@
+//Importing all the required packages for the problem class
 import java.io.*;
 import java.util.*;
-import java.util.HashMap;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -16,6 +16,7 @@ import org.jfree.chart.annotations.XYTextAnnotation;
 import java.awt.*; 
 import javax.swing.*; 
 
+///Parallel Fine-grained version of the Ant Colony Optimization algorithm for the symmetric travelling salesperson problem
 class problem {
     //Contains the data from the file
     static ArrayList<String> dataArray = new ArrayList<String>();
@@ -23,21 +24,24 @@ class problem {
     static ArrayList<City> cityData = new ArrayList<>();
     //Contains the distance between every pair of cities on the map
     static HashMap<Integer, HashMap<Integer, Integer>> cityMap = new HashMap<>();
-    //Number of ants in the colony
-    static int numAnts = 0;
-    //Creates the Colony object
+    //Number of threads
+    static int numThreads = 0;
+    //Contains the threads that run the 2 ant sub-colonies
     static ArrayList<Threads> threads = new ArrayList<>();
-    static ArrayList<Solution> bestSolutions = new ArrayList<>();
+    //The global best solution and score variables
     static Solution globalBestSolution;
     static int globalBest = 0;
 
     public static void main(String[] args){
+        //Parse in the filename and number of threads
         if(args.length != 2){
-            System.err.println("Usage: java problem <filename> <numAnts>");
+            System.err.println("Usage: java problem <filename> <numThreads>");
         }
+        //Read the problem set file
         String file = args[0];
-        numAnts = Integer.parseInt(args[1]);
+        numThreads = Integer.parseInt(args[1]);
         readFile(file);
+        //Parse the data and create a 2D scatter plot of the cities
         dataArray = getCoords(dataArray);
         cityData = plotCities(dataArray);
         cityMap = createHashMap(cityData);
@@ -109,6 +113,7 @@ class problem {
         return map;
     }
 
+    //Creates a shallow copy of the list of cities
     public static ArrayList<City> createShallow(){
         ArrayList<City> shallowCity = new ArrayList<>();
         for(City city : cityData){
@@ -117,9 +122,10 @@ class problem {
         return shallowCity;
     }
 
+    //Starts the initial ant solution construction and updates the pheromones
     public static Solution deployColony(){
         ArrayList<ArrayList<City>> pheromoneMaps = new ArrayList<>();
-        for(int i = 0; i < numAnts; i++){
+        for(int i = 0; i < numThreads; i++){
             ArrayList<City> cities = createShallow();
             Ant ant = new Ant(cities, cityMap, i);
             Threads t = new Threads(cities, false, ant);
@@ -166,6 +172,9 @@ class problem {
         return bestSolution;
     }
 
+    //Performs the 2-opt local search on the ant solution to get the best improvement solution in
+    //the neighbourhood
+    @SuppressWarnings("unchecked")
     public static Solution localSearch(Solution solution){
         Solution initSolution = solution;
         Solution bestSolution = initSolution;
@@ -194,6 +203,7 @@ class problem {
         return bestSolution;
     }
 
+    //Updates the list of best solutions found
     public static ArrayList<Solution> updateBest(ArrayList<Solution> solutionList, ArrayList<Solution> solutionBest){
         int i = 0;
         while(solutionBest.size() < solutionList.size()){
@@ -242,10 +252,12 @@ class problem {
         return cities;
     }
 
+    //Optimization method of ant colony that creates updated solutions based on the pheromone
+    //deposited by the ants
     public static Solution beginOptimization(){
         ArrayList<ArrayList<City>> pheromoneMaps = new ArrayList<>();
         threads.removeAll(threads);
-        for(int i = 0; i < numAnts; i++){
+        for(int i = 0; i < numThreads; i++){
             ArrayList<City> cities = createShallow();
             Ant ant = new Ant(cities, cityMap, i);
             Threads t = new Threads(cities, true, ant);
@@ -294,6 +306,7 @@ class problem {
         return bestSolution;
     }
 
+    //Updates the pheromone values after each iteration of solution creation
     public static ArrayList<City> globalUpdatePheromone(ArrayList<Solution> solutions, ArrayList<City> cities){
         for(City city : cities){
             city.evaporatePheromones();
@@ -302,6 +315,8 @@ class problem {
         return cities;
     }
 
+    //Growth function of the pheromone update rule to increment pheromone values of good
+    //solutions
     private static void growth(ArrayList<Solution> solutions){
         for(int j = 0; j < solutions.size(); j++){
             Solution solution = solutions.get(j);
@@ -319,6 +334,7 @@ class problem {
         }
     }
 
+    ///Plot class of that creates the visualization of the problem set and the solution
     protected static class Plot extends JFrame{
         private static final long serialVersionUID = 6294689542092367723L;
         XYTextAnnotation annot;
@@ -328,6 +344,7 @@ class problem {
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
         ChartPanel panel = new ChartPanel(chart);
         
+        //Plot constructor object that handles the event listener
         public Plot(String title){
             super(title);
             Solution solution = new Solution(cityData, cityMap, new Ant(cityData, cityMap, 0));
@@ -387,6 +404,7 @@ class problem {
             setContentPane(panel);
         }
 
+        //Creates the datapoints for the scatter plot based on the provided list of cities in order
         private XYDataset createDataset(ArrayList<City> dataArray){
             XYSeriesCollection dataset = new XYSeriesCollection();
             XYSeries series = new XYSeries("Cities", false);

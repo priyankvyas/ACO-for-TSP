@@ -1,5 +1,7 @@
+//Importing all the required packages for the thread
 import java.util.ArrayList;
 
+///Thread that runs one ant and handles solution construction
 public class Threads extends Thread {
     public ArrayList<City> cities;
     public boolean isUpdate;
@@ -7,12 +9,15 @@ public class Threads extends Thread {
     public int bestScore;
     public ArrayList<City> xcity;
     public ArrayList<Solution> bestSolutions = new ArrayList<>();
+
+    //Thread constructor
     public Threads(ArrayList<City> city, boolean isUpdate, Ant ant){
         this.cities = city;
         this.isUpdate = isUpdate;
         this.ant = ant;
     }
 
+    //Runs optimization for 2 ants
     public void run(){
         if(!this.isUpdate){
             ArrayList<Solution> solutionList = new ArrayList<>();
