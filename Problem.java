@@ -1,3 +1,5 @@
+//Priyank_1297953_Sivaram_1299026
+
 //Importing all the required packages for the problem class
 import java.io.*;
 import java.util.*;
@@ -354,8 +356,10 @@ class problem {
                 public void chartMouseClicked(ChartMouseEvent me){
                     if(me.getTrigger().getButton() == java.awt.event.MouseEvent.BUTTON1){
                         int i = 0;
+                        long start = System.currentTimeMillis();
+                        System.out.println("Start time: " + start);
                         Solution solution = new Solution(cityData, cityMap, new Ant(cityData, cityMap, 0));
-                        while(i != 1000){
+                        while(i != 500){
                             if(renderer.getSeriesLinesVisible(0) == null || !renderer.getSeriesLinesVisible(0)){
                                 solution = deployColony();
                             }
@@ -370,6 +374,7 @@ class problem {
                         }
                         scatterplot.setDataset(createDataset(globalBestSolution.sol));
                         System.out.print("Final Score: " + globalBest + "\n");
+                        System.out.println("Time elapsed: " + (start - System.currentTimeMillis()));
                         renderer.setSeriesLinesVisible(0, true);
                         scatterplot.setRenderer(renderer);
                         setContentPane(panel);

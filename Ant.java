@@ -1,3 +1,5 @@
+//Priyank_1297953_Sivaram_1299026
+
 //Importing all the required packages for the ant class
 import java.util.*;
 
@@ -113,8 +115,8 @@ public class Ant {
         Object[] map = cityMap.keySet().toArray();
         ArrayList<City> cData = (ArrayList<City>)cityData.clone();
         double total = 0;
-        double alpha = 0.5;
-        double beta = 0.5;
+        double alpha = 0.75;
+        double beta = 0.25;
         for(Path path : paths){
             cData.get(path.toCity).prob += Math.pow(path.pheromoneCount, alpha);
             double rank = 0;
