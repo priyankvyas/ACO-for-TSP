@@ -1,3 +1,5 @@
+//Priyank_1297953_Sivaram_1299026
+
 //Importing required files for the ant object
 import java.util.*;
 
@@ -109,8 +111,8 @@ public class Ant {
     private void getProb(ArrayList<Path> paths, HashMap<Integer, Integer> cityMap){
         Object[] map = cityMap.keySet().toArray();
         double total = 0;
-        double alpha = 0.5;
-        double beta = 0.5;
+        double alpha = 0.75;
+        double beta = 0.25;
         for(Path path : paths){
             cityData.get(path.toCity).prob += Math.pow(path.pheromoneCount, alpha);
             double rank = 0;

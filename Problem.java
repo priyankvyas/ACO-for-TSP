@@ -1,3 +1,5 @@
+//Priyank_1297953_Sivaram_1299026
+
 //Importing all the required packages for the problem class
 import java.io.*;
 import java.util.*;
@@ -28,6 +30,8 @@ class problem {
     static Colony colony = new Colony();
     //Contains all the best solutions found throughout the run
     static ArrayList<Solution> bestSolutions = new ArrayList<>();
+    //Number of ants for testing
+    static int numAnts = 20;
 
     public static void main(String[] args){
         if(args.length != 1){
@@ -120,7 +124,7 @@ class problem {
     //Starts the colony and constructs the initial solutions using nearest neighbours
     public static void deployColony(){
         ArrayList<Solution> solutionList = new ArrayList<>();
-        for(int i = 0; i < Colony.ants.size(); i++){
+        for(int i = 0; i < numAnts; i++){
             Solution solution = Colony.ants.get(i).constuctSolution();
             Colony.ants.get(i).solution = solution;
             solutionList.add(solution);
@@ -216,7 +220,7 @@ class problem {
     //Deploys the ants to create new solutions based on the pheromone deposits
     public static void beginOptimization(){
         ArrayList<Solution> solutionList = new ArrayList<>();
-        for(int i = 0; i < Colony.ants.size(); i++){
+        for(int i = 0; i < numAnts; i++){
             Solution solution = Colony.ants.get(i).updateSolution();
             solution = localSearch(solution);
             Colony.ants.get(i).solution = solution;
@@ -284,6 +288,8 @@ class problem {
                 public void chartMouseClicked(ChartMouseEvent me){
                     if(me.getTrigger().getButton() == java.awt.event.MouseEvent.BUTTON1){
                         int i = 0;
+                        long start = System.currentTimeMillis();
+                        System.out.println("Start time: " + start);
                         while(i != 100){
                             if(renderer.getSeriesLinesVisible(0) == null || !renderer.getSeriesLinesVisible(0)){
                                 deployColony();
@@ -299,6 +305,7 @@ class problem {
                         }
                         scatterplot.setDataset(createDataset(bestSolutions.get(0).sol));
                         System.out.print("Final Score: " + bestSolutions.get(0).score + "\n");
+                        System.out.println("Time elapsed: " + (start - System.currentTimeMillis()));
                         renderer.setSeriesLinesVisible(0, true);
                         scatterplot.setRenderer(renderer);
                         setContentPane(panel);
