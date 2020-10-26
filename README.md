@@ -2,8 +2,8 @@
 Please download the JFreeChart package for Java using the link below:  
 https://repo1.maven.org/maven2/org/jfree/jfreechart/  
   
-Usage: java problem \<filename\> \<numAnts\>  
-Here \<filename\> would be one of the *.tsp.txt files provided in the repository.  
+Usage: java problem \<filename\> \<w\>  
+Here \<filename\> would be one of the *.tsp.txt files provided in the repository and \<w\> is the parameter for w best solutions.  
 Initially a 2-D scatter plot will be displaying the cities in the dataset.  
 When the mouse is hovered over the points, the cities' index will be displayed.  
 The algorithm starts running when the left mouse button is clicked on the plot.  
