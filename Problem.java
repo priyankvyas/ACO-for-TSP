@@ -1,7 +1,6 @@
+//Importing all the required packages for the problem class
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.*;
-import java.util.HashMap;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -17,6 +16,7 @@ import org.jfree.chart.annotations.XYTextAnnotation;
 import java.awt.*; 
 import javax.swing.*; 
 
+///Serial version of the Ant System algorithm using Min-Max strategy for the symmetric travelling salesperson problem
 class problem {
     //Contains the data from the file
     static ArrayList<String> dataArray = new ArrayList<String>();
@@ -28,18 +28,22 @@ class problem {
     static int numAnts = 0;
     //Creates the Colony object
     static Colony colony = new Colony();
+    //Contains the best solutions found throughout the run
     static ArrayList<Solution> bestSolutions = new ArrayList<>();
-    static ArrayList<Ant> bestAnts = new ArrayList<>();
+    //Upper and lower bounds for pheromone values
     static double upperLimit = 1000;
     static double lowerLimit = 10;
 
     public static void main(String[] args){
+        //Parse in the filename        
         if(args.length != 2){
             System.err.println("Usage: java problem <filename> <numAnts>");
         }
+        //Read the problem set file
         String file = args[0];
         numAnts = Integer.parseInt(args[1]);
         readFile(file);
+        //Parse the data and create a 2D scatter plot of the cities
         dataArray = getCoords(dataArray);
         cityData = plotCities(dataArray);
         cityMap = createHashMap(cityData);
@@ -120,11 +124,11 @@ class problem {
         }
     }
 
+    //Starts the initial ant solution construction and updates the pheromones
     public static void deployColony(){
         ArrayList<Solution> solutionList = new ArrayList<>();
         for(int i = 0; i < Colony.ants.size(); i++){
             Solution solution = Colony.ants.get(i).constuctSolution();
-            // solution = localSearch(solution);
             Colony.ants.get(i).solution = solution;
             solutionList.add(solution);
         }
@@ -136,10 +140,11 @@ class problem {
         System.out.print("Initital Score: " + bestScore + "\n");
         initiatePheromone(solutionList);
         globalUpdatePheromone(solutionList);
-        //beginOptimization();
     }
 
-    private static Solution localSearch(Solution solution){
+    //Performs the 2-opt local search on the ant solution to get the best improvement solution in
+    //the neighbourhood
+        private static Solution localSearch(Solution solution){
         Solution initSolution = solution;
         Solution bestSolution = initSolution;
         Ant ant = initSolution.ant;
@@ -147,6 +152,7 @@ class problem {
         int bestScore = bestSolution.score;
         for(int i = 0; i < initSolution.sol.size() - 1; i++){
             for(int j = i + 2; j < initSolution.sol.size() - 2; j++){
+                @SuppressWarnings("unchecked")
                 ArrayList<City> temp = (ArrayList<City>)initSolution.sol.clone();
                 City end1 = temp.get(i + 1);
                 City end2 = temp.get(j);
@@ -167,6 +173,8 @@ class problem {
         return bestSolution;
     }
 
+    //Updates the list of best solutions by adding new solutions and sorting it to keep the list
+    //size constant
     private static ArrayList<Solution> updateBest(ArrayList<Solution> solutionList, ArrayList<Solution> solutionBest){
         int i = 0;
         while(solutionBest.size() <= numAnts){
@@ -214,6 +222,8 @@ class problem {
         }
     }
 
+    //Optimization method of ant colony that creates updated solutions based on the pheromone
+    //deposited by the ants
     public static void beginOptimization(){
         ArrayList<Solution> solutionList = new ArrayList<>();
         for(int i = 0; i < Colony.ants.size(); i++){
@@ -232,6 +242,7 @@ class problem {
         globalUpdatePheromone(solutionList);
     }
 
+    //Updates the pheromone values after each iteration of solution creation
     public static void globalUpdatePheromone(ArrayList<Solution> solutions){
         for(City city : cityData){
             city.evaporatePheromones(lowerLimit);
@@ -239,6 +250,8 @@ class problem {
         growth(solutions);
     }
 
+    //Growth function of the pheromone update rule to increment pheromone values of good
+    //solutions using Min-Max strategy
     private static void growth(ArrayList<Solution> solutions){
         double g = 0;
         for(int j = 0; j < numAnts; j++){
@@ -262,6 +275,7 @@ class problem {
         }
     }
 
+    ///Plot class of that creates the visualization of the problem set and the solution
     protected static class Plot extends JFrame{
         private static final long serialVersionUID = 6294689542092367723L;
         XYTextAnnotation annot;
@@ -271,6 +285,7 @@ class problem {
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
         ChartPanel panel = new ChartPanel(chart);
         
+        //Plot constructor object that handles the event listener
         public Plot(String title){
             super(title);
             scatterplot.setBackgroundPaint(new Color(255,255,255));
@@ -328,6 +343,7 @@ class problem {
             setContentPane(panel);
         }
 
+        //Creates the datapoints for the scatter plot based on the provided list of cities in order
         private XYDataset createDataset(ArrayList<City> dataArray){
             XYSeriesCollection dataset = new XYSeriesCollection();
             XYSeries series = new XYSeries("Cities", false);

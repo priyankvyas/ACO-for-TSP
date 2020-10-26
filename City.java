@@ -1,6 +1,7 @@
+//Importing all the required packages for the city object
 import java.util.ArrayList;
-// import java.util.Random;
 
+///City object that represents the datapoint of the city in the problem set
 public class City {
     protected int xCoord;
     protected int yCoord;
@@ -30,9 +31,8 @@ public class City {
 
     //Evaporates the pheromone counts of the paths
     public void evaporatePheromones(double lower){
-        // Percentage Evaporation
         for(Path path: paths){
-            double rate = 0.5; // 50%
+            double rate = 0.5;
             if(path.pheromoneCount > lower){
                 path.pheromoneCount = (1 - rate) * path.pheromoneCount;
             }

@@ -1,3 +1,4 @@
+///Path object that represents the possible routes from one city to another
 public class Path {
     protected double pheromoneCount;
     protected int fromCity;
