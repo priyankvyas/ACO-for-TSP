@@ -119,7 +119,7 @@ class problem {
 
     public static void deployColonies(){
         ArrayList<ArrayList<City>> pheromoneMaps = new ArrayList<>();
-        for(int i = 0; i < numAnts; i++){
+        for(int i = 0; i < 4; i++){
             ArrayList<City> cities = createShallow(cityData);
             ColonyThread ct = new ColonyThread(cities, i);
             ct.start();
