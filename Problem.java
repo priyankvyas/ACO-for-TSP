@@ -1,3 +1,5 @@
+//Priyank_1297953_Sivaram_1299026
+
 import java.io.*;
 import java.util.*;
 import java.util.HashMap;
@@ -292,7 +294,9 @@ class problem {
                 public void chartMouseClicked(ChartMouseEvent me){
                     if(me.getTrigger().getButton() == java.awt.event.MouseEvent.BUTTON1){
                         int i = 0;
-                        while(i != 1000){
+                        long start = System.currentTimeMillis();
+                        System.out.println("Start time: " + start);
+                        while(i != 100){
                             if(renderer.getSeriesLinesVisible(0) == null || !renderer.getSeriesLinesVisible(0)){
                                 deployColony();
                             }
@@ -307,6 +311,7 @@ class problem {
                         }
                         scatterplot.setDataset(createDataset(bestSolutions.get(0).sol));
                         System.out.print("Final Score: " + bestSolutions.get(0).score + "\n");
+                        System.out.println("Time elapsed: " + (start - System.currentTimeMillis()));
                         renderer.setSeriesLinesVisible(0, true);
                         scatterplot.setRenderer(renderer);
                         setContentPane(panel);
