@@ -338,7 +338,7 @@ class problem {
                     if(me.getTrigger().getButton() == java.awt.event.MouseEvent.BUTTON1){
                         int i = 0;
                         Solution solution = new Solution(cityData, cityMap, new Ant(cityData, cityMap, 0));
-                        while(i != 100){
+                        while(i != 1000){
                             if(renderer.getSeriesLinesVisible(0) == null || !renderer.getSeriesLinesVisible(0)){
                                 solution = deployColony();
                             }
